@@ -16,6 +16,23 @@
       "revId": "9bd84925bee3754bbcffa8e3eb0336cf914404a7",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65856a69_77ef0768",
+        "filename": "neutron_plugin_contrail/extensions/quotasv2_detail.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 126
+      },
+      "writtenOn": "2020-07-09T07:27:23Z",
+      "side": 1,
+      "message": "BTW, you may either set the above quota-driver value or replace \"lambda: QUOTA_DRIVER \u003d\u003d DB_QUOTA_DRIVER\" with \"lambda: True\" Since our extension would only be invoked when someone uses our plugin so i believe we can always assume True. Anyways please check with Edouard/Sajeesh once.",
+      "revId": "9bd84925bee3754bbcffa8e3eb0336cf914404a7",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
     }
   ]
 }
