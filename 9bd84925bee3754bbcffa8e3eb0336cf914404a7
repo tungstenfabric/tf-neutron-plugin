@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5bc5ee61_40a056a0",
+        "filename": "neutron_plugin_contrail/extensions/quotasv2_detail.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 578
+      },
+      "writtenOn": "2020-07-10T05:07:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7b4086fd_e020dd6a",
+      "revId": "9bd84925bee3754bbcffa8e3eb0336cf914404a7",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65856a69_77ef0768",
         "filename": "neutron_plugin_contrail/extensions/quotasv2_detail.py",
         "patchSetId": 2
@@ -33,6 +51,24 @@
       "revId": "9bd84925bee3754bbcffa8e3eb0336cf914404a7",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01ceb466_cf2347c1",
+        "filename": "neutron_plugin_contrail/extensions/quotasv2_detail.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 578
+      },
+      "writtenOn": "2020-07-10T05:07:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65856a69_77ef0768",
+      "revId": "9bd84925bee3754bbcffa8e3eb0336cf914404a7",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
     }
   ]
 }
