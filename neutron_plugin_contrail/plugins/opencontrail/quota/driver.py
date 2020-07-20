@@ -38,23 +38,25 @@ class QuotaDriver(object):
     in neutron.conf.
     """
     quota_neutron_to_contrail_type = {
-            'subnet': 'subnet',
-            'network': 'virtual_network',
-            'floatingip': 'floating_ip',
-            'route_table': 'route_table',
-            'security_group': 'security_group',
-            'security_group_rule': 'security_group_rule',
-            'router': 'logical_router',
-            'port': 'virtual_machine_interface',
-            'pool': 'loadbalancer_pool',
-            'vip': 'virtual_ip',
-            'member': 'loadbalancer_member',
-            'health_monitor': 'loadbalancer_healthmonitor',
-            'firewall_group': 'firewall_group',
-            'firewall_policy': 'firewall_policy',
-            'firewall_rule': 'firewall_rule',
-            'trunk': 'virtual_port_group',
-            }
+        'subnet': 'subnet',
+        'network': 'virtual_network',
+        'floatingip': 'floating_ip',
+        'route_table': 'route_table',
+        'security_group': 'security_group',
+        'security_group_rule': 'security_group_rule',
+        'router': 'logical_router',
+        'port': 'virtual_machine_interface',
+        'pool': 'loadbalancer_pool',
+        'vip': 'virtual_ip',
+        'member': 'loadbalancer_member',
+        'healthmonitor': 'loadbalancer_healthmonitor',
+        'firewall_group': 'firewall_group',
+        'firewall_policy': 'firewall_policy',
+        'firewall_rule': 'firewall_rule',
+        'trunk': 'virtual_port_group',
+        'listener': 'loadbalancer_listener',
+        'loadbalancer': 'loadbalancer',
+    }
 
     @classmethod
     def _get_vnc_conn(cls):
