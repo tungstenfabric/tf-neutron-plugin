@@ -51,11 +51,13 @@ class QuotaDriver(object):
         'pool': 'loadbalancer_pool',
         'vip': 'virtual_ip',
         'member': 'loadbalancer_member',
-        'health_monitor': 'loadbalancer_healthmonitor',
+        'healthmonitor': 'loadbalancer_healthmonitor',
         'firewall_group': 'firewall_group',
         'firewall_policy': 'firewall_policy',
         'firewall_rule': 'firewall_rule',
         'trunk': 'virtual_port_group',
+        'listener': 'loadbalancer_listener',
+        'loadbalancer': 'loadbalancer',
     }
 
     @classmethod
