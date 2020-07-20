@@ -2,6 +2,7 @@
 # Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
 #
 
+import functools
 from vnc_api import exceptions as vnc_exc
 try:
     from neutron.common.exceptions import BadRequest
@@ -18,6 +19,40 @@ from neutron_plugin_contrail.plugins.opencontrail.loadbalancer.v2 import loadbal
 from neutron_plugin_contrail.plugins.opencontrail.loadbalancer.v2 import loadbalancer_pool
 from neutron_plugin_contrail.plugins.opencontrail.loadbalancer.v2 import loadbalancer
 from neutron_plugin_contrail.plugins.opencontrail.loadbalancer.v2 import listener
+
+try:
+    from neutron.openstack.common import log as logging
+except ImportError:
+    from oslo_log import log as logging
+
+from eventlet.greenthread import getcurrent
+
+LOG = logging.getLogger(__name__)
+
+def set_auth_token(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        context = args[1]
+
+        try:
+            auth_token = getcurrent().contrail_vars.token
+        except Exception as exc:
+            raise BadRequest(resource='loadbalancer', msg=str(msg))
+
+        if not auth_token:
+            msg = "Auth-token in thread storage is set to None"
+            raise BadRequest(resource='loadbalancer', msg=str(msg))
+
+        if context.auth_token != auth_token:
+            LOG.warning("Token in thread is different from context token")
+            LOG.debug("Tenant ID %s" % context.tenant_id )
+
+        # forward user token to API server for RBAC
+        self.api.set_auth_token(auth_token)
+
+        return func(*args, **kwargs)
+    return wrapper
 
 
 class LoadBalancerPluginDbV2(LoadBalancerPluginBaseV2):
@@ -80,96 +115,96 @@ class LoadBalancerPluginDbV2(LoadBalancerPluginBaseV2):
     def get_api_client(self):
         return self.api
 
+    @set_auth_token
     def get_loadbalancers(self, context, filters=None, fields=None):
-        self.api.set_auth_token(context.auth_token)
         return self.loadbalancer_manager.get_collection(context, filters, fields)
 
+    @set_auth_token
     def get_loadbalancer(self, context, id, fields=None):
-        self.api.set_auth_token(context.auth_token)
         return self.loadbalancer_manager.get_resource(context, id, fields)
 
+    @set_auth_token
     def create_loadbalancer(self, context, loadbalancer):
-        self.api.set_auth_token(context.auth_token)
         try:
             return self.loadbalancer_manager.create(context, loadbalancer)
         except vnc_exc.PermissionDenied as ex:
             raise BadRequest(resource='loadbalancer', msg=str(ex))
 
+    @set_auth_token
     def update_loadbalancer(self, context, id, loadbalancer):
-        self.api.set_auth_token(context.auth_token)
         return self.loadbalancer_manager.update(context, id, loadbalancer)
 
+    @set_auth_token
     def delete_loadbalancer(self, context, id):
-        self.api.set_auth_token(context.auth_token)
         return self.loadbalancer_manager.delete(context, id)
 
+    @set_auth_token
     def create_listener(self, context, listener):
-        self.api.set_auth_token(context.auth_token)
         try:
             return self.listener_manager.create(context, listener)
         except vnc_exc.PermissionDenied as ex:
             raise BadRequest(resource='listener', msg=str(ex))
 
+    @set_auth_token
     def get_listener(self, context, id, fields=None):
-        self.api.set_auth_token(context.auth_token)
         return self.listener_manager.get_resource(context, id, fields)
 
+    @set_auth_token
     def get_listeners(self, context, filters=None, fields=None):
-        self.api.set_auth_token(context.auth_token)
         return self.listener_manager.get_collection(context, filters, fields)
 
+    @set_auth_token
     def update_listener(self, context, id, listener):
-        self.api.set_auth_token(context.auth_token)
         return self.listener_manager.update(context, id, listener)
 
+    @set_auth_token
     def delete_listener(self, context, id):
-        self.api.set_auth_token(context.auth_token)
         return self.listener_manager.delete(context, id)
 
+    @set_auth_token
     def get_pools(self, context, filters=None, fields=None):
-        self.api.set_auth_token(context.auth_token)
         return self.pool_manager.get_collection(context, filters, fields)
 
+    @set_auth_token
     def get_pool(self, context, id, fields=None):
-        self.api.set_auth_token(context.auth_token)
         return self.pool_manager.get_resource(context, id, fields)
 
+    @set_auth_token
     def create_pool(self, context, pool):
-        self.api.set_auth_token(context.auth_token)
         try:
             return self.pool_manager.create(context, pool)
         except vnc_exc.PermissionDenied as ex:
             raise BadRequest(resource='pool', msg=str(ex))
 
+    @set_auth_token
     def update_pool(self, context, id, pool):
-        self.api.set_auth_token(context.auth_token)
         return self.pool_manager.update(context, id, pool)
 
+    @set_auth_token
     def delete_pool(self, context, id):
-        self.api.set_auth_token(context.auth_token)
         return self.pool_manager.delete(context, id)
 
+    @set_auth_token
     def get_pool_members(self, context, pool_id, filters=None, fields=None):
-        self.api.set_auth_token(context.auth_token)
         return self.member_manager.get_collection(context, pool_id, filters, fields)
 
+    @set_auth_token
     def get_pool_member(self, context, id, pool_id, fields=None):
-        self.api.set_auth_token(context.auth_token)
         return self.member_manager.get_resource(context, id, pool_id, fields)
 
+    @set_auth_token
     def create_pool_member(self, context, pool_id, member):
-        self.api.set_auth_token(context.auth_token)
         try:
             return self.member_manager.create(context, pool_id, member)
         except vnc_exc.PermissionDenied as ex:
             raise BadRequest(resource='member', msg=str(ex))
 
+    @set_auth_token
     def update_pool_member(self, context, id, pool_id, member):
-        self.api.set_auth_token(context.auth_token)
         return self.member_manager.update(context, id, member)
 
+    @set_auth_token
     def delete_pool_member(self, context, id, pool_id):
-        self.api.set_auth_token(context.auth_token)
         return self.member_manager.delete(context, id, pool_id)
 
     def get_members(self, context, filters=None, fields=None):
@@ -178,27 +213,27 @@ class LoadBalancerPluginDbV2(LoadBalancerPluginBaseV2):
     def get_member(self, context, id, fields=None):
         pass
 
+    @set_auth_token
     def get_healthmonitors(self, context, filters=None, fields=None):
-        self.api.set_auth_token(context.auth_token)
         return self.monitor_manager.get_collection(context, filters, fields)
 
+    @set_auth_token
     def get_healthmonitor(self, context, id, fields=None):
-        self.api.set_auth_token(context.auth_token)
         return self.monitor_manager.get_resource(context, id, fields)
 
+    @set_auth_token
     def create_healthmonitor(self, context, healthmonitor):
-        self.api.set_auth_token(context.auth_token)
         try:
             return self.monitor_manager.create(context, healthmonitor)
         except vnc_exc.PermissionDenied as ex:
             raise BadRequest(resource='healthmonitor', msg=str(ex))
 
+    @set_auth_token
     def update_healthmonitor(self, context, id, healthmonitor):
-        self.api.set_auth_token(context.auth_token)
         return self.monitor_manager.update(context, id, healthmonitor)
 
+    @set_auth_token
     def delete_healthmonitor(self, context, id):
-        self.api.set_auth_token(context.auth_token)
         return self.monitor_manager.delete(context, id)
 
     def stats(self, context, loadbalancer_id):
