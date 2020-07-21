@@ -1,6 +1,6 @@
+flexmock
 mock
-testtools
-fixtures
-webtest
-neutron
 oslotest
+junitxml
+os-testr < 2.0.0
+stestr < 3.0.0
