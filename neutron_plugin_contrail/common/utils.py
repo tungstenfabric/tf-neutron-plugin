@@ -126,6 +126,7 @@ def vnc_api_is_authenticated(api_server_ips):
                             cfg.CONF.APISERVER.timeout),
                 verify=cfg.CONF.APISERVER.get('cafile', False))
         except requests.exceptions.RequestException as e:
+            req_exception = e
             LOG.warning("Failed connecting to API server: %s" % e)
             continue
 
@@ -133,7 +134,10 @@ def vnc_api_is_authenticated(api_server_ips):
             return False
         elif response.status_code == requests.codes.unauthorized:
             return True
-    response.raise_for_status()
+    else:
+        raise Exception('Unable to verify that vnc_api is authenticated. '
+                        'All API server instances are unavailable. '
+                        'API server addresses: {}'.format(str(api_server_ips)))
 
 
 def get_keystone_auth_info():
