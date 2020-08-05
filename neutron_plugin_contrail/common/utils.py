@@ -113,6 +113,7 @@ def vnc_api_is_authenticated(api_server_ips):
 
     :returns: True if credentials are needed, False otherwise
     """
+    response = None
     for api_server_ip in api_server_ips:
         url = "%s://%s:%s/aaa-mode" % (
             'https' if cfg.CONF.APISERVER.use_ssl else 'http',
