@@ -133,7 +133,7 @@ def vnc_api_is_authenticated(api_server_ips):
             return False
         elif response.status_code == requests.codes.unauthorized:
             return True
-    response.raise_for_status()
+        response.raise_for_status()
 
 
 def get_keystone_auth_info():
