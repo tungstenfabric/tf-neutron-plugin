@@ -113,6 +113,7 @@ def vnc_api_is_authenticated(api_server_ips):
 
     :returns: True if credentials are needed, False otherwise
     """
+    req_exception = None
     for api_server_ip in api_server_ips:
         url = "%s://%s:%s/aaa-mode" % (
             'https' if cfg.CONF.APISERVER.use_ssl else 'http',
@@ -126,6 +127,7 @@ def vnc_api_is_authenticated(api_server_ips):
                             cfg.CONF.APISERVER.timeout),
                 verify=cfg.CONF.APISERVER.get('cafile', False))
         except requests.exceptions.RequestException as e:
+            req_exception = e
             LOG.warning("Failed connecting to API server: %s" % e)
             continue
 
@@ -133,7 +135,8 @@ def vnc_api_is_authenticated(api_server_ips):
             return False
         elif response.status_code == requests.codes.unauthorized:
             return True
-    response.raise_for_status()
+    if req_exception is not None:
+        raise req_exception
 
 
 def get_keystone_auth_info():
