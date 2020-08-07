@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b031cbd_14b0757a",
+        "filename": "neutron_plugin_contrail/common/utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 64
+      },
+      "writtenOn": "2020-08-07T20:59:20Z",
+      "side": 1,
+      "message": "Is response.raise_for_status() is expected to run when all API-server\u0027s status_code do not fall in ok or unauthorized or even if one api-server fails?\n\nPer the ticket, there is an issue with neutron vnc-api communications. In such case, raise_for_status would never be run with this modification so it\u0027ll eventually this function will return None. \nwhen this function returns None, will that be considered as OK or FAIL?",
+      "revId": "03fed0bef30d95401494eecdc0756ace49046e2a",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
