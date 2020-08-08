@@ -9,6 +9,7 @@ try:
 except ImportError:
     from neutron_lib.exceptions import NetworkNotFound
 
+
 def get_subnet_network_id(client, subnet_id):
     try:
         kv_pair = client.kv_retrieve(subnet_id)
@@ -23,6 +24,7 @@ def get_subnet_cidr(client, subnet_id):
     except vnc_exc.NoIdError:
         raise SubnetNotFound(subnet_id=subnet_id)
     return kv_pair.split()[1]
+
 
 def get_vnet_obj(client, network_id):
     try:

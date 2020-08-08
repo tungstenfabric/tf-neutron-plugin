@@ -213,8 +213,7 @@ class LogicalRouterGetHandler(res_handler.ResourceGetHandler,
         router_list = self._router_list_project(project_id=project_id,
                                                 detail=True)
         for router_obj in router_list or []:
-            for vmi in (router_obj.get_virtual_machine_interface_refs()
-                        or []):
+            for vmi in (router_obj.get_virtual_machine_interface_refs() or []):
                 vmi_obj = vmi_get_handler.get_vmi_obj(vmi['uuid'])
                 if (vmi_obj.get_virtual_network_refs()[0]['uuid'] ==
                         port_net_id):
@@ -274,7 +273,7 @@ class LogicalRouterGetHandler(res_handler.ResourceGetHandler,
                 if not self._filters_is_present(filters, 'id', proj_rtr_id):
                     continue
 
-                proj_rtr_fq_name = unicode(proj_rtr['fq_name'])
+                proj_rtr_fq_name = str(proj_rtr['fq_name'])
                 if not self._filters_is_present(filters, 'fq_name',
                                                 proj_rtr_fq_name):
                     continue

@@ -42,11 +42,15 @@ class SubnetMixin(object):
         network = netaddr.IPNetwork('%s/%s' % (pfx, pfx_len))
         return '%s %s/%s' % (net_id, str(network.ip), pfx_len)
 
+    @staticmethod
+    def _subnet_network(subnet_vnc):
+        pfx = subnet_vnc.subnet.get_ip_prefix()
+        pfx_len = subnet_vnc.subnet.get_ip_prefix_len()
+        return netaddr.IPNetwork('%s/%s' % (pfx, pfx_len))
+
     def subnet_cidr_overlaps(self, subnet1, subnet2):
-        cidr = lambda sn: netaddr.IPNetwork('%s/%s' % (
-            sn.subnet.get_ip_prefix(), sn.subnet.get_ip_prefix_len()))
-        cidr1 = cidr(subnet1)
-        cidr2 = cidr(subnet2)
+        cidr1 = self._subnet_network(subnet1)
+        cidr2 = self._subnet_network(subnet2)
         return cidr1.first <= cidr2.last and cidr2.first <= cidr1.last
 
     def _subnet_vnc_read_mapping(self, id=None, key=None):
@@ -102,7 +106,7 @@ class SubnetMixin(object):
         if not allocation_pools:
             if gateway_ip and (int(
                     netaddr.IPNetwork(gateway_ip).network) == int(
-                    netaddr.IPNetwork(cidr).network+1)):
+                    netaddr.IPNetwork(cidr).network + 1)):
                 first_ip = str(netaddr.IPNetwork(cidr).network + 2)
             else:
                 first_ip = str(netaddr.IPNetwork(cidr).network + 1)

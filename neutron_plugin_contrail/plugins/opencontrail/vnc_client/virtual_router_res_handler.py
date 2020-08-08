@@ -14,10 +14,8 @@
 # limitations under the License.
 
 from vnc_api import exceptions as vnc_exc
-from vnc_api import vnc_api
 
 import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.vn_res_handler as vn_handler
 
 try:
     from neutron.openstack.common import log as logging
@@ -25,6 +23,7 @@ except ImportError:
     from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
+
 
 class VirtualRouterMixin(object):
     @staticmethod
@@ -37,6 +36,7 @@ class VirtualRouterMixin(object):
         # expression below to assure True or False values
         vr = {'dpdk_enabled': dpdk_enabled or False}
         return vr
+
 
 class VirtualRouterGetHandler(res_handler.ResourceGetHandler,
                               VirtualRouterMixin):
@@ -57,6 +57,7 @@ class VirtualRouterGetHandler(res_handler.ResourceGetHandler,
     def resource_list(self, context, filters=None, fields=None):
         router_obj = self._resource_list(filters=filters, fields=fields)
         return router_obj
+
 
 class VirtualRouterHandler(VirtualRouterGetHandler):
     pass

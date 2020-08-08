@@ -19,9 +19,6 @@
 import copy
 import logging
 from pprint import pformat
-import sys
-
-import cgitb
 
 LOG = logging.getLogger(__name__)
 
@@ -59,7 +56,7 @@ class NeutronPluginContrailIpam(object):
         """
         plugin_ipam = copy.deepcopy(ipam)
         ipam_dicts = self._core._update_resource('ipam', context, ipam_id,
-                                           plugin_ipam)
+                                                 plugin_ipam)
 
         LOG.debug("update_ipam(): " + pformat(ipam_dicts))
         return ipam_dicts
@@ -80,8 +77,8 @@ class NeutronPluginContrailIpam(object):
                                                fields)
 
         LOG.debug(
-            "get_ipams(): filters: " + pformat(filters) + " data: "
-            + pformat(ipam_dicts))
+            "get_ipams(): filters: " + pformat(filters) +
+            " data: " + pformat(ipam_dicts))
         return ipam_dicts
 
     def get_ipams_count(self, context, filters=None):

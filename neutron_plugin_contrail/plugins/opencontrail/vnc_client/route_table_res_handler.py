@@ -130,7 +130,7 @@ class RouteTableCreateHandler(res_handler.ResourceCreateHandler):
                         route['next_hop'] = si_obj.get_fq_name_str()
                     rt_obj.set_routes(
                         vnc_api.RouteTableType.factory(**rt_q['routes']))
-                except Exception as e:
+                except Exception:
                     pass
         try:
             self._resource_create(rt_obj)

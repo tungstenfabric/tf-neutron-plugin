@@ -31,17 +31,6 @@ try:
     from oslo.config import cfg
 except ImportError:
     from oslo_config import cfg
-from neutron.db import portbindings_base
-from neutron.extensions import allowedaddresspairs
-from neutron.extensions import external_net
-from neutron.extensions import l3
-from neutron.extensions import portbindings
-from neutron.extensions import securitygroup
-from neutron import neutron_plugin_base_v2
-try:
-    from neutron.openstack.common import importutils
-except ImportError:
-    from oslo_utils import importutils
 
 try:
     from neutron.openstack.common import jsonutils as json
@@ -59,32 +48,33 @@ from eventlet.greenthread import getcurrent
 import neutron_plugin_contrail.plugins.opencontrail.contrail_plugin_base as plugin_base
 from vnc_api import utils as vncutils
 
-_DEFAULT_KS_CERT_BUNDLE="/tmp/keystonecertbundle.pem"
-_DEFAULT_API_CERT_BUNDLE="/tmp/apiservercertbundle.pem"
-_DEFAULT_SERVER_CONNECT="http"
-_DEFAULT_SECURE_SERVER_CONNECT="https"
+_DEFAULT_KS_CERT_BUNDLE = "/tmp/keystonecertbundle.pem"
+_DEFAULT_API_CERT_BUNDLE = "/tmp/apiservercertbundle.pem"
+_DEFAULT_SERVER_CONNECT = "http"
+_DEFAULT_SECURE_SERVER_CONNECT = "https"
 
 LOG = logging.getLogger(__name__)
 
 
 class InvalidContrailExtensionError(ServiceUnavailable):
-    message = _("Invalid Contrail Extension: %(ext_name) %(ext_class)")
+    message = "Invalid Contrail Extension: %(ext_name) %(ext_class)"
+
 
 class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
 
     PLUGIN_URL_PREFIX = '/neutron'
 
     def _build_auth_details(self):
-        #keystone
+        # keystone
         self._authn_token = None
         if cfg.CONF.auth_strategy == 'keystone':
             kcfg = cfg.CONF.keystone_authtoken
 
-            #Keystone SSL Support
-            self._ksinsecure=kcfg.insecure
-            kscertfile=kcfg.certfile
-            kskeyfile=kcfg.keyfile
-            kscafile=kcfg.cafile
+            # Keystone SSL Support
+            self._ksinsecure = kcfg.insecure
+            kscertfile = kcfg.certfile
+            kskeyfile = kcfg.keyfile
+            kscafile = kcfg.cafile
 
             self._use_ks_certs = False
             if (cfg.CONF.keystone_authtoken.auth_protocol ==
@@ -93,7 +83,7 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
                 if kscertfile and kskeyfile:
                     certs = [kscertfile, kskeyfile, kscafile]
                 self._kscertbundle = vncutils.getCertKeyCaBundle(
-                        _DEFAULT_KS_CERT_BUNDLE,certs)
+                    _DEFAULT_KS_CERT_BUNDLE, certs)
                 self._use_ks_certs = True
 
             auth_uri = kcfg.auth_uri or ''
@@ -139,17 +129,17 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
                 else:
                     self.ks_sess = session.Session(auth=self.auth_plugin)
 
-        #API Server SSL support
-        self._apiusessl=cfg.CONF.APISERVER.use_ssl
-        self._apiinsecure=cfg.CONF.APISERVER.insecure
-        apicertfile=cfg.CONF.APISERVER.certfile
-        apikeyfile=cfg.CONF.APISERVER.keyfile
-        apicafile=cfg.CONF.APISERVER.cafile
+        # API Server SSL support
+        self._apiusessl = cfg.CONF.APISERVER.use_ssl
+        self._apiinsecure = cfg.CONF.APISERVER.insecure
+        apicertfile = cfg.CONF.APISERVER.certfile
+        apikeyfile = cfg.CONF.APISERVER.keyfile
+        apicafile = cfg.CONF.APISERVER.cafile
 
         if self._apiusessl:
-            self._apiserverconnect=_DEFAULT_SECURE_SERVER_CONNECT
+            self._apiserverconnect = _DEFAULT_SECURE_SERVER_CONNECT
         else:
-            self._apiserverconnect=_DEFAULT_SERVER_CONNECT
+            self._apiserverconnect = _DEFAULT_SERVER_CONNECT
 
         self._use_api_certs = False
         if self._apiusessl and apicafile:
@@ -157,7 +147,7 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
             if apicertfile and apikeyfile:
                 certs = [apicertfile, apikeyfile, apicafile]
             self._apicertbundle = vncutils.getCertKeyCaBundle(
-                    _DEFAULT_API_CERT_BUNDLE,certs)
+                _DEFAULT_API_CERT_BUNDLE, certs)
             self._use_api_certs = True
 
     def get_token(self):
@@ -165,24 +155,17 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
         if self.ks_sess:
             authn_token = self.ks_sess.get_token()
         else:
+            kwargs = {
+                'timeout': (cfg.CONF.APISERVER.connection_timeout,
+                            cfg.CONF.APISERVER.timeout),
+                'data': self._authn_body,
+                'headers': {'Content-type': 'application/json'}
+            }
             if self._ksinsecure:
-               response = requests.post(self._keystone_url,
-                                        timeout=(cfg.CONF.APISERVER.connection_timeout,
-                                                 cfg.CONF.APISERVER.timeout),
-                                        data=self._authn_body,
-                                        headers={'Content-type': 'application/json'},verify=False)
+                kwargs['verify'] = False
             elif not self._ksinsecure and self._use_ks_certs:
-               response = requests.post(self._keystone_url,
-                                        timeout=(cfg.CONF.APISERVER.connection_timeout,
-                                                 cfg.CONF.APISERVER.timeout),
-                                        data=self._authn_body,
-                                        headers={'Content-type': 'application/json'},verify=self._kscertbundle)
-            else:
-               response = requests.post(self._keystone_url,
-                                        timeout=(cfg.CONF.APISERVER.connection_timeout,
-                                                 cfg.CONF.APISERVER.timeout),
-                                        data=self._authn_body,
-                                        headers={'Content-type': 'application/json'})
+                kwargs['verify'] = self._kscertbundle
+            response = requests.post(self._keystone_url, **kwargs)
             if (response.status_code == requests.codes.ok):
                 authn_content = json.loads(response.text)
                 authn_token = authn_content['access']['token']['id']
@@ -191,25 +174,17 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
 
     def _request_api_server(self, url, data=None, headers=None, retry=True):
         # Attempt to post to Api-Server
+        kwargs = {
+            'timeout': (cfg.CONF.APISERVER.connection_timeout,
+                        cfg.CONF.APISERVER.timeout),
+            'data': data,
+            'headers': headers
+        }
         if self._apiinsecure:
-             response = requests.post(url,
-                                      timeout=(cfg.CONF.APISERVER.connection_timeout,
-                                               cfg.CONF.APISERVER.timeout),
-                                      data=data,
-                                      headers=headers,verify=False)
+            kwargs['verify'] = False
         elif not self._apiinsecure and self._use_api_certs:
-             response = requests.post(url,
-                                      timeout=(cfg.CONF.APISERVER.connection_timeout,
-                                               cfg.CONF.APISERVER.timeout),
-                                      data=data,
-                                      headers=headers,
-                                      verify=self._apicertbundle)
-        else:
-             response = requests.post(url,
-                                      timeout=(cfg.CONF.APISERVER.connection_timeout,
-                                               cfg.CONF.APISERVER.timeout),
-                                      data=data,
-                                      headers=headers)
+            kwargs['verify'] = self._apicertbundle
+        response = requests.post(url, **kwargs)
         if (response.status_code == requests.codes.unauthorized) and retry:
             # Get token from keystone and save it for next request
             authn_token = self.get_token()
@@ -239,7 +214,7 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
 
     def _relay_request(self, url_path, data=None):
         """Send received request to api server."""
-
+        exc = None
         api_server_count = self.api_servers.len()
         api_server_list = self.api_servers.api_servers[:]
         for idx in range(api_server_count):
@@ -257,12 +232,13 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
                     headers={'Content-type': 'application/json'},
                 )
             except Exception as e:
-                 api_server_list.remove(api_server_ip)
-                 LOG.warning("Failed to relay request to VNC API URL %s" % url)
+                exc = e
+                api_server_list.remove(api_server_ip)
+                LOG.warning("Failed to relay request to VNC API URL %s" % url)
         msg = ("All VNC API server(s) (%s) are down" %
-                        ', '.join(cfg.CONF.APISERVER.api_server_ip.split()))
+               ', '.join(cfg.CONF.APISERVER.api_server_ip.split()))
         LOG.critical(msg)
-        raise e
+        raise exc
 
     def _request_backend(self, context, data_dict, obj_name, action):
         context_dict = self._encode_context(context, action, obj_name)
@@ -322,7 +298,6 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
             info['exception'] = 'NotAuthorized'
 
         plugin_base._raise_contrail_error(info, obj_name)
-
 
     def _create_resource(self, res_type, context, res_data):
         """Create a resource in API server.
@@ -417,17 +392,16 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
                   {'res_type': res_type, 'res_count': res_count})
         return res_count
 
-
     def add_router_interface(self, context, router_id, interface_info):
         """Add interface to a router."""
 
         if not interface_info:
-            msg = _("Either subnet_id or port_id must be specified")
+            msg = "Either subnet_id or port_id must be specified"
             raise BadRequest(resource='router', msg=msg)
 
         if 'port_id' in interface_info:
             if 'subnet_id' in interface_info:
-                msg = _("Cannot specify both subnet-id and port-id")
+                msg = "Cannot specify both subnet-id and port-id"
                 raise BadRequest(resource='router', msg=msg)
 
         res_dict = self._encode_resource(resource_id=router_id,
@@ -443,7 +417,7 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
         """Delete interface from a router."""
 
         if not interface_info:
-            msg = _("Either subnet_id or port_id must be specified")
+            msg = "Either subnet_id or port_id must be specified"
             raise BadRequest(resource='router', msg=msg)
 
         res_dict = self._encode_resource(resource_id=router_id,
