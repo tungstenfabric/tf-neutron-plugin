@@ -9,17 +9,23 @@ try:
     from neutron.api.v2.attributes import ATTR_NOT_SPECIFIED
 except Exception:
     from neutron_lib.constants import ATTR_NOT_SPECIFIED
+try:
+    from neutron.common.exceptions import NotAuthorized
+except ImportError:
+    from neutron_lib.exceptions import NotAuthorized
 
 try:
     from neutron.openstack.common import uuidutils
 except ImportError:
     from oslo_utils import uuidutils
-from vnc_api.vnc_api import *
+from vnc_api.vnc_api import (
+    LoadbalancerPoolType, KeyValuePair, IdPermsType, LoadbalancerPool,
+    KeyValuePairs, NoIdError)
+from vnc_api import exceptions as vnc_exc
 
 from .. resource_manager import ResourceManager, EntityInUse
 from .. resource_manager import LoadbalancerMethodInvalid
 
-import uuid
 
 class LoadbalancerPoolManager(ResourceManager):
 
@@ -50,7 +56,7 @@ class LoadbalancerPoolManager(ResourceManager):
     def create_update_custom_attributes(self, custom_attributes, kvps):
         kvp_array = []
         for custom_attribute in custom_attributes or []:
-            for key,value in custom_attribute.iteritems():
+            for key, value in custom_attribute.iteritems():
                 kvp = KeyValuePair(key, value)
                 kvp_array.append(kvp)
 
@@ -89,8 +95,9 @@ class LoadbalancerPoolManager(ResourceManager):
         custom_attributes = []
         kvps = pool.get_loadbalancer_pool_custom_attributes()
         if kvps:
-            custom_attributes = [{kvp.get_key(): kvp.get_value()} \
-                                 for kvp in kvps.get_key_value_pair() or []]
+            custom_attributes = [
+                {kvp.get_key(): kvp.get_value()}
+                for kvp in kvps.get_key_value_pair() or []]
         res['custom_attributes'] = [custom_attributes]
 
         if props.session_persistence:
@@ -125,7 +132,7 @@ class LoadbalancerPoolManager(ResourceManager):
     def resource_update(self, obj):
         try:
             return self._api.loadbalancer_pool_update(obj)
-        except HttpError as e:
+        except vnc_exc.HttpError as e:
             if 'LoadbalancerMethodType' in e.content:
                 pool_props = obj.get_loadbalancer_pool_properties()
                 lb_method = pool_props.get_loadbalancer_method()
@@ -165,7 +172,7 @@ class LoadbalancerPoolManager(ResourceManager):
                                                     id=p['listener_id'])
             project_id = ll.parent_uuid
             if str(uuid.UUID(tenant_id)) != project_id:
-                raise exc.NotAuthorized()
+                raise NotAuthorized()
         else:
             ll = None
 
@@ -183,8 +190,8 @@ class LoadbalancerPoolManager(ResourceManager):
             pool_exists = ll.get_loadbalancer_pool_back_refs()
             if pool_exists is not None:
                 raise loadbalancerv2.OnePoolPerListener(
-                                     listener_id=p['listener_id'],
-                                     pool_id=pool_exists[0]['uuid'])
+                    listener_id=p['listener_id'],
+                    pool_id=pool_exists[0]['uuid'])
             pool.set_loadbalancer_listener(ll)
 
         # Custom attributes

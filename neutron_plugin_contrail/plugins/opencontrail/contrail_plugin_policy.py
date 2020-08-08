@@ -19,9 +19,6 @@
 import copy
 import logging
 from pprint import pformat
-import sys
-
-import cgitb
 
 LOG = logging.getLogger(__name__)
 
@@ -79,14 +76,14 @@ class NeutronPluginContrailPolicy(object):
         Retrieves all policies identifiers.
         """
         if not context.is_admin:
-           filters['tenant_id'] = context.project_id
+            filters['tenant_id'] = context.project_id
 
         policy_dicts = self._core._list_resource('policy', context, filters,
                                                  fields)
 
         LOG.debug(
-            "get_policys(): filters: " + pformat(filters) + " data: "
-            + pformat(policy_dicts))
+            "get_policys(): filters: " + pformat(filters) +
+            " data: " + pformat(policy_dicts))
         return policy_dicts
 
     def get_policy_count(self, context, filters=None):

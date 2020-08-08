@@ -17,11 +17,6 @@ try:
 except ImportError:
     from neutron.common import exceptions as n_exc
 
-try:
-    from neutron._i18n import _
-except ImportError:
-    from neutron.i18n import _
 
 class AuthStrategyNotSupported(n_exc.NeutronException):
-        message = _("Authentication strategy %(auth_strategy)s is not "
-                    "supported.")
+    message = "Authentication strategy %(auth_strategy)s is not supported."

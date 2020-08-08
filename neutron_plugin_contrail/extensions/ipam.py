@@ -16,11 +16,6 @@ except ImportError:
 from neutron.api.extensions import ResourceExtension
 from neutron import manager
 
-try:
-    from oslo.config import cfg
-except ImportError:
-    from oslo_config import cfg
-
 # Ocata compatibility
 _use_plugins_directory = False
 try:
@@ -29,9 +24,11 @@ try:
 except ImportError:
     pass
 
+
 # Ipam Exceptions
 class IpamNotFound(NotFound):
-    message = _("IPAM %(id)s could not be found")
+    message = "IPAM %(id)s could not be found"
+
 
 # Attribute Map
 RESOURCE_ATTRIBUTE_MAP = {
