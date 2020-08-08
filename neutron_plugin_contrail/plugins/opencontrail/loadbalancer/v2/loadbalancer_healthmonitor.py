@@ -13,6 +13,7 @@ except ImportError:
 from vnc_api.vnc_api import IdPermsType
 from vnc_api.vnc_api import LoadbalancerHealthmonitor
 from vnc_api.vnc_api import LoadbalancerHealthmonitorType
+from vnc_api.vnc_api import NoIdError
 
 from .. resource_manager import ResourceManager, EntityInUse
 
@@ -118,17 +119,19 @@ class LoadbalancerHealthmonitorManager(ResourceManager):
             raise loadbalancerv2.EntityNotFound(name='Pool', id=m['pool_id'])
         exist_hm_refs = pool.get_loadbalancer_healthmonitor_refs()
         if exist_hm_refs is not None:
-            raise loadbalancerv2.OneHealthMonitorPerPool(pool_id=m['pool_id'],
-                                               hm_id=exist_hm_refs[0]['uuid'])
+            raise loadbalancerv2.OneHealthMonitorPerPool(
+                pool_id=m['pool_id'], hm_id=exist_hm_refs[0]['uuid'])
         self._api.loadbalancer_healthmonitor_create(monitor_db)
-        self._api.ref_update('loadbalancer-pool', m['pool_id'],
+        self._api.ref_update(
+            'loadbalancer-pool', m['pool_id'],
             'loadbalancer-healthmonitor', uuid, None, 'ADD')
         return self.make_dict(monitor_db)
 
     def delete(self, context, id):
         hm_obj = self._api.loadbalancer_healthmonitor_read(id=id)
         for pool_back_refs in hm_obj.get_loadbalancer_pool_back_refs() or []:
-            self._api.ref_update('loadbalancer-pool', pool_back_refs['uuid'],
+            self._api.ref_update(
+                'loadbalancer-pool', pool_back_refs['uuid'],
                 'loadbalancer-healthmonitor', id, None, 'DELETE')
         super(LoadbalancerHealthmonitorManager, self).delete(context, id)
 

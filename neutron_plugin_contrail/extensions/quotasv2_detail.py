@@ -20,7 +20,6 @@ from neutron_lib import exceptions as n_exc
 from neutron_lib.plugins import directory
 from oslo_config import cfg
 
-from neutron._i18n import _
 from neutron.api import extensions
 from neutron.api.v2 import resource
 from neutron.extensions import quotasv2
@@ -46,14 +45,13 @@ class DetailQuotaSetsController(quotasv2.QuotaSetsController):
             resource_registry.get_all_resources(), tenant_id)
 
     def details(self, request, id):
-        if id != request.context.project_id:
-            # Check if admin
-            if not request.context.is_admin:
-                reason = _("Only admin is authorized to access quotas for"
-                           " another tenant")
-                raise n_exc.AdminRequired(reason=reason)
-        return {self._resource_name:
-                    self._get_detailed_quotas(request, id)}
+        # Check if admin
+        if id != request.context.project_id and not request.context.is_admin:
+            reason = "Only admin is authorized to access quotas for another tenant"
+            raise n_exc.AdminRequired(reason=reason)
+        return {
+            self._resource_name:
+            self._get_detailed_quotas(request, id)}
 
 
 class Quotasv2_detail(api_extensions.ExtensionDescriptor):

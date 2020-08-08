@@ -15,8 +15,6 @@
 # @author: Hampapur Ajay, Praneet Bachheti, Rudra Rugge, Atul Moghe
 
 
-import os.path as path
-
 try:
     from neutron.api.v2.attributes import ATTR_NOT_SPECIFIED
 except Exception:
@@ -25,10 +23,6 @@ try:
     from neutron.common.exceptions import ServiceUnavailable
 except ImportError:
     from neutron_lib.exceptions import ServiceUnavailable
-try:
-    from neutron.common.exceptions import InvalidInput
-except ImportError:
-    from neutron_lib.exceptions import InvalidInput
 try:
     from neutron.common.exceptions import NeutronException
 except ImportError:
@@ -154,12 +148,13 @@ def _raise_contrail_error(info, obj_name):
 
 
 class InvalidContrailExtensionError(ServiceUnavailable):
-    message = _("Invalid Contrail Extension: %(ext_name) %(ext_class)")
+    message = "Invalid Contrail Extension: %(ext_name) %(ext_class)"
 
 
 class HttpResponseError(Exception):
-      def __init__(self, resp_info):
-          self.response_info = resp_info
+    def __init__(self, resp_info):
+        self.response_info = resp_info
+
 
 class NeutronPluginContrailCoreBase(neutron_plugin_base_v2.NeutronPluginBaseV2,
                                     securitygroup.SecurityGroupPluginBase,
@@ -215,7 +210,7 @@ class NeutronPluginContrailCoreBase(neutron_plugin_base_v2.NeutronPluginBaseV2,
                                     ext_instance.__getattribute__(method))
                 self.supported_extension_aliases.append(ext_name)
             except Exception:
-                LOG.exception(_("Contrail Backend Error"))
+                LOG.exception("Contrail Backend Error")
                 # Converting contrail backend error to Neutron Exception
                 raise InvalidContrailExtensionError(
                     ext_name=ext_name, ext_class=ext_class)
@@ -302,7 +297,7 @@ class NeutronPluginContrailCoreBase(neutron_plugin_base_v2.NeutronPluginBaseV2,
             if (len(subnet['subnet']['host_routes']) >
                     cfg.CONF.max_subnet_host_routes):
                 raise neutron_exc.HostRoutesExhausted(subnet_id=subnet[
-                    'subnet'].get('id', _('new subnet')),
+                    'subnet'].get('id', 'new subnet'),
                     quota=cfg.CONF.max_subnet_host_routes)
 
         subnet_created = self._create_resource('subnet', context, subnet)
@@ -358,11 +353,9 @@ class NeutronPluginContrailCoreBase(neutron_plugin_base_v2.NeutronPluginBaseV2,
     def _make_port_dict(self, port, fields=None):
         """filters attributes of a port based on fields."""
 
-        if portbindings.VIF_TYPE in port and \
-            port[portbindings.VIF_TYPE] == portbindings.VIF_TYPE_VHOST_USER:
-            vhostuser = True
-        else:
-            vhostuser = False
+        vhostuser = (
+            portbindings.VIF_TYPE in port and
+            port[portbindings.VIF_TYPE] == portbindings.VIF_TYPE_VHOST_USER)
 
         if not fields:
             port.update(self.base_binding_dict)
