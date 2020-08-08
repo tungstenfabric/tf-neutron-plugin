@@ -16,22 +16,14 @@ except ImportError:
 from neutron_lbaas.extensions import loadbalancerv2
 
 try:
-    from neutron.openstack.common import log as logging
-except ImportError:
-    from oslo_log import log as logging
-
-try:
     from neutron.openstack.common import uuidutils
 except ImportError:
     from oslo_utils import uuidutils
 
 from vnc_api.vnc_api import IdPermsType, NoIdError
-from vnc_api.vnc_api import InstanceIp, VirtualMachineInterface
-from vnc_api.vnc_api import SecurityGroup
 from vnc_api.vnc_api import LoadbalancerListener, LoadbalancerListenerType
 
 from .. resource_manager import ResourceManager, EntityInUse
-from .. import utils
 import uuid
 
 
@@ -82,7 +74,7 @@ class ListenerManager(ResourceManager):
                'protocol_port': props.protocol_port,
                'admin_state_up': props.admin_state,
                'default_pool_id': self._get_default_pool(ll),
-               'loadbalancers' : self._get_loadbalancers(ll)}
+               'loadbalancers': self._get_loadbalancers(ll)}
         if res['loadbalancers']:
             res['loadbalancer_id'] = res['loadbalancers'][0]['id']
 
@@ -119,16 +111,16 @@ class ListenerManager(ResourceManager):
         return "loadbalancer-listeners"
 
     def create(self, context, listener):
-        l = listener['listener']
-        tenant_id = self._get_tenant_id_for_create(context, l)
+        _l = listener['listener']
+        tenant_id = self._get_tenant_id_for_create(context, _l)
         project = self._project_read(project_id=tenant_id)
 
-        if l['loadbalancer_id']:
+        if _l['loadbalancer_id']:
             try:
-                lb = self._api.loadbalancer_read(id=l['loadbalancer_id'])
+                lb = self._api.loadbalancer_read(id=_l['loadbalancer_id'])
             except NoIdError:
                 raise loadbalancerv2.EntityNotFound(name='Loadbalancer',
-                                                    id=v['loadbalancer_id'])
+                                                    id=_l['loadbalancer_id'])
             project_id = lb.parent_uuid
             if str(uuid.UUID(tenant_id)) != project_id:
                 raise NotAuthorized()
@@ -137,16 +129,16 @@ class ListenerManager(ResourceManager):
 
         obj_uuid = uuidutils.generate_uuid()
         name = self._get_resource_name('loadbalancer-listener',
-                                       project, l['name'], obj_uuid)
-        id_perms = IdPermsType(enable=True, description=l['description'])
+                                       project, _l['name'], obj_uuid)
+        id_perms = IdPermsType(enable=True, description=_l['description'])
         ll = LoadbalancerListener(name, project, id_perms=id_perms,
-                                  display_name=l['name'])
+                                  display_name=_l['name'])
         ll.uuid = obj_uuid
 
         if lb:
             ll.set_loadbalancer(lb)
 
-        props = self.make_properties(l)
+        props = self.make_properties(_l)
         ll.set_loadbalancer_listener_properties(props)
 
         self._api.loadbalancer_listener_create(ll)
@@ -154,7 +146,7 @@ class ListenerManager(ResourceManager):
 
     def delete_listener(self, context, id):
         try:
-            ll = self._api.loadbalancer_listener_read(id=id)
+            _ = self._api.loadbalancer_listener_read(id=id)
         except NoIdError:
             loadbalancerv2.EntityNotFound(name=self.neutron_name, id=id)
 
@@ -178,7 +170,6 @@ class ListenerManager(ResourceManager):
         # update
         change = self.update_properties_subr(props, ll)
         return change
-
 
     def update_properties(self, ll_db, id, ll):
         props = ll_db.get_loadbalancer_listener_properties()

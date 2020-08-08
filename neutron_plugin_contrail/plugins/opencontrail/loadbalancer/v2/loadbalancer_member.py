@@ -102,7 +102,7 @@ class LoadbalancerMemberManager(ResourceManager):
         """
         member_list = []
         pool_members = self._api.loadbalancer_members_list(
-                parent_id=pool_id)
+            parent_id=pool_id)
         if 'loadbalancer-members' in pool_members:
             member_list.extend(pool_members['loadbalancer-members'])
 
@@ -168,7 +168,7 @@ class LoadbalancerMemberManager(ResourceManager):
 
     def delete(self, context, id, pool_id):
         try:
-            member = self._api.loadbalancer_member_read(id=id)
+            _ = self._api.loadbalancer_member_read(id=id)
         except NoIdError:
             raise loadbalancerv2.EntityNotFound(name=self.neutron_name, id=id)
 
@@ -197,8 +197,8 @@ class LoadbalancerMemberManager(ResourceManager):
                 continue
             member_obj = self._api.loadbalancer_member_read(id=member['uuid'])
             props = member_obj.get_loadbalancer_member_properties()
-            if ((props.get_address() == db_props.get_address()) and
-                (props.get_protocol_port() == db_props.get_protocol_port())):
+            if (props.get_address() == db_props.get_address() and
+                    props.get_protocol_port() == db_props.get_protocol_port()):
                 raise loadbalancerv2.MemberExists(
                     address=props.get_address(),
                     port=props.get_protocol_port(),

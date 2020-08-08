@@ -2,12 +2,16 @@
 # Copyright (c) 2013 Juniper Networks, Inc. All rights reserved.
 #
 
+import re
 from setuptools import setup, find_packages
+
 
 def requirements(filename):
     with open(filename) as f:
         lines = f.read().splitlines()
-    return lines
+    c = re.compile(r'\s*#.*')
+    return list(filter(bool, map(lambda y: c.sub('', y).strip(), lines)))
+
 
 setup(
     name='neutron_plugin_contrail',
@@ -17,9 +21,9 @@ setup(
     zip_safe=False,
     long_description="Contrail neutron plugin",
 
-    install_requires=requirements('requirements.txt'),
-
     test_suite='neutron_plugin_contrail.tests',
+
+    install_requires=requirements('requirements.txt'),
     tests_require=requirements('test-requirements.txt'),
 
     entry_points={

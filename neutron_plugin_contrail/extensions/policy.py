@@ -16,11 +16,6 @@ except ImportError:
 from neutron.api.extensions import ResourceExtension
 from neutron import manager
 
-try:
-    from oslo.config import cfg
-except ImportError:
-    from oslo_config import cfg
-
 # Ocata compatibility
 _use_plugins_directory = False
 try:
@@ -29,9 +24,11 @@ try:
 except ImportError:
     pass
 
+
 # Policy Exceptions
 class PolicyNotFound(NotFound):
-    message = _("Policy %(id)s could not be found")
+    message = "Policy %(id)s could not be found"
+
 
 # Attribute Map
 RESOURCE_ATTRIBUTE_MAP = {
@@ -102,8 +99,6 @@ class Policy(ExtensionDescriptor):
 
         return exts
 
-#end class Policy
-
 
 class PolicyPluginBase(object):
 
@@ -126,4 +121,3 @@ class PolicyPluginBase(object):
     @abstractmethod
     def get_policys(self, context, filters=None, fields=None):
         pass
-#end class PolicyPluginBase

@@ -190,17 +190,18 @@ class ResourceGetHandler(ContrailResourceHandler):
 
         json_resource = self.resource_list_method.replace("_", "-")
         json_resource = json_resource.replace('-list', '')
-        if self.resource_list_method == "floating_ips_list":
-            count = lambda pid: self._resource_list(
-                back_ref_id=pid, count=True, back_refs=False,
-                detail=False)[json_resource]['count']
-        else:
-            count = lambda pid: self._resource_list(
+
+        def _count(pid):
+            if self.resource_list_method == "floating_ips_list":
+                return self._resource_list(
+                    back_ref_id=pid, count=True, back_refs=False,
+                    detail=False)[json_resource]['count']
+            return self._resource_list(
                 parent_id=pid, count=True, back_refs=False,
                 detail=False)[json_resource]['count']
 
-        ret = [count(self._project_id_neutron_to_vnc(pid) if pid else None)
-               for pid in project_ids] if project_ids else [count(None)]
+        ret = [_count(self._project_id_neutron_to_vnc(pid) if pid else None)
+               for pid in project_ids] if project_ids else [_count(None)]
         return sum(ret)
 
 

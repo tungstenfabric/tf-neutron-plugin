@@ -8,9 +8,7 @@ try:
 except ImportError:
     from neutron_lib.exceptions import BadRequest
 
-from neutron_lbaas.extensions import loadbalancerv2
 from neutron_lbaas.extensions.loadbalancerv2 import LoadBalancerPluginBaseV2
-
 
 from neutron_plugin_contrail.common import utils
 from neutron_plugin_contrail.plugins.opencontrail.loadbalancer.v2 import loadbalancer_healthmonitor
