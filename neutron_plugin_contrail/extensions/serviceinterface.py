@@ -9,10 +9,11 @@ except ImportError:
 
 EXTENDED_ATTRIBUTES_2_0 = {
     'ports': {
-        'binding:service_interface_type': {'allow_post': True,
-                             'allow_put': False,
-                             'default': ATTR_NOT_SPECIFIED,
-                             'is_visible': True},
+        'binding:service_interface_type': {
+            'allow_post': True,
+            'allow_put': False,
+            'default': ATTR_NOT_SPECIFIED,
+            'is_visible': True},
     },
 }
 

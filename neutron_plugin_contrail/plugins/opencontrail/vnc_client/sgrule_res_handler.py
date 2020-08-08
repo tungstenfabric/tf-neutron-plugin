@@ -151,7 +151,7 @@ class SecurityGroupRuleGetHandler(res_handler.ResourceGetHandler,
             return
 
         if filters:
-            filter_ids  = [id for id in filters.get('id', []) if filters]
+            filter_ids = [_id for _id in filters.get('id', [])]
         else:
             filter_ids = None
         for sg_rule in sgr_entries.get_policy_rule():
@@ -336,11 +336,11 @@ class SecurityGroupRuleCreateHandler(res_handler.ResourceCreateHandler,
                 security_group=sg_obj.get_fq_name_str())]
 
         if sgr_q['direction'] == 'ingress':
-            dir = '>'
+            _dir = '>'
             local = endpt
             remote = [vnc_api.AddressType(security_group='local')]
         else:
-            dir = '>'
+            _dir = '>'
             remote = endpt
             local = [vnc_api.AddressType(security_group='local')]
 
@@ -354,7 +354,7 @@ class SecurityGroupRuleCreateHandler(res_handler.ResourceCreateHandler,
         sgr_uuid = str(uuid.uuid4()) if 'id' not in sgr_q else sgr_q['id']
 
         rule = vnc_api.PolicyRuleType(
-            rule_uuid=sgr_uuid, direction=dir,
+            rule_uuid=sgr_uuid, direction=_dir,
             protocol=sgr_q['protocol'],
             src_addresses=local,
             src_ports=[vnc_api.PortType(0, 65535)],

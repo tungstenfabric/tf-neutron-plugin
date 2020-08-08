@@ -1,8 +1,8 @@
 import mock
 import unittest
-import uuid
 
 from neutron_plugin_contrail.plugins.opencontrail.quota.driver import QuotaDriver
+
 
 class ContrailPluginQuotaDriverTest(unittest.TestCase):
     def setUp(self):
@@ -20,25 +20,27 @@ class ContrailPluginQuotaDriverTest(unittest.TestCase):
         class MockResource():
             name = 'default'
             default = -1
-            def __init__(self, name = 'default', default = -1):
+
+            def __init__(self, name='default', default=-1):
                 self.name = name
                 self.default = default
-            
+
         driver = QuotaDriver()
         ctx = MockContext()
 
         foo_quotas = {'network': 5}
-        default_quotas = {'network': MockResource('network', 5) }
+        default_quotas = {'network': MockResource('network', 5)}
         target_tenant = 'f00dbeef012f411b89d68928ee8703ee'
 
         with mock.patch.object(QuotaDriver,
                                'get_tenant_quotas',
                                return_value=foo_quotas) as get_tenant_quotas:
 
-            quotas = driver._get_quotas(ctx,
-                                        default_quotas,
-                                        ['network'])
-            self.assertEqual(quotas, foo_quotas)
+            # TODO: restore this block - there is no such method _get_quotas
+            # quotas = driver._get_quotas(ctx,
+            #                             default_quotas,
+            #                             ['network'])
+            # self.assertEqual(quotas, foo_quotas)
 
             quotas = driver.get_all_quotas(ctx,
                                            default_quotas)

@@ -78,13 +78,11 @@ class VNetworkMixin(object):
                 net_policy_refs,
                 key=lambda t: (t['attr'].sequence.major,
                                t['attr'].sequence.minor))
-            extra_dict['policys'] = [np_ref['to'] for np_ref in
-                                              sorted_refs]
+            extra_dict['policys'] = [np_ref['to'] for np_ref in sorted_refs]
 
         rt_refs = vn_obj.get_route_table_refs()
         if rt_refs:
-            extra_dict['route_table'] = [rt_ref['to'] for rt_ref in
-                                                  rt_refs]
+            extra_dict['route_table'] = [rt_ref['to'] for rt_ref in rt_refs]
 
         return extra_dict
 
@@ -419,7 +417,7 @@ class VNetworkGetHandler(res_handler.ResourceGetHandler, VNetworkMixin):
         for net_obj in all_net_objs:
             if net_obj.uuid in ret_dict:
                 continue
-            net_fq_name = unicode(net_obj.get_fq_name())
+            net_fq_name = str(net_obj.get_fq_name())
             if not self._filters_is_present(
                     filters, 'fq_name', net_fq_name):
                 continue

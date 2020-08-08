@@ -16,10 +16,10 @@ from oslo_log import log as logging
 
 from neutron_lib.services import base as service_base
 from neutron_lib.api.definitions import trunk as trunk_apidef
-from neutron_lib.api.definitions import trunk_details
 from neutron_lib.plugins import directory
 
 LOG = logging.getLogger(__name__)
+
 
 class TrunkPlugin(service_base.ServicePluginBase):
     """Implements Contrail Neutron Trunk Service plugin."""
@@ -60,21 +60,21 @@ class TrunkPlugin(service_base.ServicePluginBase):
 
     def update_trunk(self, context, id, trunk):
         return self._core_plugin._update_resource(
-           'trunk',
-           context,
-           id,
-           {'trunk': trunk})
+            'trunk',
+            context,
+            id,
+            {'trunk': trunk})
 
     def delete_trunk(self, context, id):
         self._core_plugin._delete_resource('trunk', context, id)
 
     def add_subports(self, context, trunk_id, subports):
         self._add_or_remove_subports(context, 'ADD_SUBPORTS', trunk_id,
-                                    subports)
+                                     subports)
 
     def remove_subports(self, context, trunk_id, subports):
         self._add_or_remove_subports(context, 'REMOVE_SUBPORTS', trunk_id,
-                                    subports)
+                                     subports)
 
     def _add_or_remove_subports(self, context, action, trunk_id, subports):
         res_dict = self._core_plugin._encode_resource(resource_id=trunk_id,

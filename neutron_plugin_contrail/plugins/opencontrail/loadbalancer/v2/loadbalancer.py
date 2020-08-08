@@ -10,10 +10,6 @@ try:
 except Exception:
     from neutron_lib.constants import DEVICE_OWNER_LOADBALANCER
 try:
-    from neutron.common.exceptions import NetworkNotFound
-except ImportError:
-    from neutron_lib.exceptions import NetworkNotFound
-try:
     from neutron.common.exceptions import BadRequest
 except ImportError:
     from neutron_lib.exceptions import BadRequest
@@ -67,7 +63,7 @@ class LoadbalancerManager(ResourceManager):
         ll_back_refs = lb.get_loadbalancer_listener_back_refs()
         if ll_back_refs:
             for ll_back_ref in ll_back_refs:
-                ll_list.append({ 'id': ll_back_ref['uuid'] })
+                ll_list.append({'id': ll_back_ref['uuid']})
         return ll_list
 
     def _get_interface_params(self, lb, props):
@@ -148,7 +144,7 @@ class LoadbalancerManager(ResourceManager):
         iip_obj = InstanceIp(name=lb_id)
         if subnet_id and subnet_id != ATTR_NOT_SPECIFIED:
             network_id = utils.get_subnet_network_id(self._api, subnet_id)
-            vnet =utils.get_vnet_obj(self._api, network_id)
+            vnet = utils.get_vnet_obj(self._api, network_id)
             iip_obj.set_subnet_uuid(subnet_id)
         elif network_id and network_id != ATTR_NOT_SPECIFIED:
             vnet = utils.get_vnet_obj(self._api, network_id)
@@ -209,32 +205,32 @@ class LoadbalancerManager(ResourceManager):
         """
         Create a loadbalancer.
         """
-        l = loadbalancer['loadbalancer']
-        if (l['provider'] == ATTR_NOT_SPECIFIED):
-            l['provider'] = "opencontrail"
-        sas_obj = self.check_provider_exists(l['provider'])
-        tenant_id = self._get_tenant_id_for_create(context, l)
+        _l = loadbalancer['loadbalancer']
+        if (_l['provider'] == ATTR_NOT_SPECIFIED):
+            _l['provider'] = "opencontrail"
+        sas_obj = self.check_provider_exists(_l['provider'])
+        tenant_id = self._get_tenant_id_for_create(context, _l)
         project = self._project_read(project_id=tenant_id)
 
         obj_uuid = uuidutils.generate_uuid()
         name = self._get_resource_name('loadbalancer', project,
-                                       l['name'], obj_uuid)
-        id_perms = IdPermsType(enable=True, description=l['description'])
+                                       _l['name'], obj_uuid)
+        id_perms = IdPermsType(enable=True, description=_l['description'])
         lb = Loadbalancer(name, project, uuid=obj_uuid,
-                          loadbalancer_provider=l['provider'],
-                          id_perms=id_perms, display_name=l['name'])
+                          loadbalancer_provider=_l['provider'],
+                          id_perms=id_perms, display_name=_l['name'])
         lb.set_service_appliance_set(sas_obj)
 
         vmi, vip_address, vip_subnet_id = self._create_virtual_interface(
-            project, obj_uuid, l['vip_subnet_id'], l['vip_network_id'],
-            l['vip_address'])
+            project, obj_uuid, _l['vip_subnet_id'], _l['vip_network_id'],
+            _l['vip_address'])
 
         lb.set_virtual_machine_interface(vmi)
 
-        l['provisioning_status'] = 'ACTIVE'
-        l['operating_status'] = 'ONLINE'
-        l['vip_subnet_id'] = vip_subnet_id
-        props = self.make_properties(l)
+        _l['provisioning_status'] = 'ACTIVE'
+        _l['operating_status'] = 'ONLINE'
+        _l['vip_subnet_id'] = vip_subnet_id
+        props = self.make_properties(_l)
         props.set_vip_address(vip_address)
         lb.set_loadbalancer_properties(props)
 
