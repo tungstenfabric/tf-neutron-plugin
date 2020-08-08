@@ -19,11 +19,6 @@ from abc import ABCMeta
 from abc import abstractmethod
 
 try:
-    from oslo.config import cfg
-except ImportError:
-    from oslo_config import cfg
-
-try:
     from neutron.api.extensions import ExtensionDescriptor
 except ImportError:
     from neutron_lib.api.extensions import ExtensionDescriptor
@@ -39,11 +34,6 @@ try:
 except ImportError:
     from neutron.quota import QUOTAS as quota
 
-try:
-    from neutron.openstack.common import uuidutils
-except ImportError:
-    from oslo_utils import uuidutils
-
 # Ocata compatibility
 _use_plugins_directory = False
 try:
@@ -52,9 +42,11 @@ try:
 except ImportError:
     pass
 
+
 # Route table Exceptions
 class RouteTableNotFound(NotFound):
-    message = _("Route table %(id)s does not exist")
+    message = "Route table %(id)s does not exist"
+
 
 # Attribute Map
 RESOURCE_ATTRIBUTE_MAP = {

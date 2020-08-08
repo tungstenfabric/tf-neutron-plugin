@@ -19,9 +19,6 @@
 import copy
 import logging
 from pprint import pformat
-import sys
-
-import cgitb
 
 LOG = logging.getLogger(__name__)
 
@@ -79,7 +76,7 @@ class NeutronPluginContrailPolicy(object):
         Retrieves all policies identifiers.
         """
         if not context.is_admin:
-           filters['tenant_id'] = context.project_id
+            filters['tenant_id'] = context.project_id
 
         policy_dicts = self._core._list_resource('policy', context, filters,
                                                  fields)

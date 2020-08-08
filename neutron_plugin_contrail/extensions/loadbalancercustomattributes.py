@@ -3,18 +3,17 @@ try:
 except ImportError:
     from neutron_lib.api.extensions import ExtensionDescriptor
 
-def _validate_custom_attributes(data, valid_values=None):
-    if not isinstance(data, list):
-        msg = _("Invalid data format for custom_attributes: '%s'") % data
-        return msg
-
-def convert_none_to_empty_list(value):
-    return [] if value is None else value
-
 try:
     from neutron.api.v2.attributes import ATTR_NOT_SPECIFIED
 except Exception:
     from neutron_lib.constants import ATTR_NOT_SPECIFIED
+
+
+def _validate_custom_attributes(data, valid_values=None):
+    if not isinstance(data, list):
+        msg = "Invalid data format for custom_attributes: '%s'" % data
+        return msg
+
 
 try:
     from neutron.api.v2 import attributes as attrs
@@ -28,6 +27,10 @@ except ImportError:
     from neutron_lib.api import validators
     validators.add_validator('type:customattributes',
                              _validate_custom_attributes)
+
+
+def convert_none_to_empty_list(value):
+    return [] if value is None else value
 
 
 # Extended_Attribute MAP
@@ -47,7 +50,6 @@ class Loadbalancercustomattributes(ExtensionDescriptor):
     @classmethod
     def get_name(cls):
         return "Loadbalancer as a Service"
-
 
     @classmethod
     def get_alias(cls):
@@ -72,5 +74,3 @@ class Loadbalancercustomattributes(ExtensionDescriptor):
             return EXTENDED_ATTRIBUTES_2_0
         else:
             return {}
-
-#end class Loadbalancercustomattributes

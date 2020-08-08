@@ -21,10 +21,6 @@ try:
     from neutron_lib import constants
 except ImportError:
     from neutron.plugins.common import constants
-try:
-    from oslo.config import cfg
-except ImportError:
-    from oslo_config import cfg
 from vnc_api import vnc_api
 
 import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
@@ -234,8 +230,8 @@ class VMInterfaceMixin(object):
             vmi_bindings = {}
 
         ret_bindings = {}
-        for k,v in vmi_bindings.items():
-            ret_bindings['binding:%s'%(k)] = v
+        for k, v in vmi_bindings.items():
+            ret_bindings['binding:%s' % (k)] = v
 
         # 1. upgrade case, port created before bindings prop was
         #    defined on vmi OR
@@ -352,7 +348,7 @@ class VMInterfaceMixin(object):
             port_q_dict.update(extra_dict)
 
         bindings_dict = self._get_port_bindings(vmi_obj)
-        for k,v in bindings_dict.items():
+        for k, v in bindings_dict.items():
             port_q_dict[k] = v
 
         if fields:
@@ -410,8 +406,6 @@ class VMInterfaceMixin(object):
             # TODO() optimize to not read sg (only uuid/fqn needed)
             sg_obj = self._vnc_lib.security_group_read(id=sg_id)
             vmi_obj.add_security_group(sg_obj)
-
-
 
     def _set_vmi_extra_dhcp_options(self, vmi_obj, extra_dhcp_options):
         dhcp_options = []
@@ -486,8 +480,8 @@ class VMInterfaceMixin(object):
         device_owner = port_q.get('device_owner')
 
         if (device_owner not in [constants.DEVICE_OWNER_ROUTER_INTF,
-                                 constants.DEVICE_OWNER_ROUTER_GW]
-                and 'device_id' in port_q):
+                                 constants.DEVICE_OWNER_ROUTER_GW] and
+                'device_id' in port_q):
             self._set_vm_instance_for_vmi(vmi_obj, port_q.get('device_id'))
 
         if device_owner is not None:
@@ -523,15 +517,18 @@ class VMInterfaceMixin(object):
         # pick binding keys from neutron repr and persist as kvp elements.
         # it is assumed allowing/denying oper*key is done at neutron-server.
         if not update:
-            vmi_binding_kvps = dict((k.replace('binding:',''), v)
-                for k,v in port_q.items() if k.startswith('binding:'))
+            vmi_binding_kvps = dict(
+                (k.replace('binding:', ''), v)
+                for k, v in port_q.items() if k.startswith('binding:'))
             vmi_obj.set_virtual_machine_interface_bindings(
-                vnc_api.KeyValuePairs([vnc_api.KeyValuePair(k,v)
-                              for k,v in vmi_binding_kvps.items()]))
+                vnc_api.KeyValuePairs([
+                    vnc_api.KeyValuePair(k, v)
+                    for k, v in vmi_binding_kvps.items()]))
         else:
-            vmi_binding_kvps = dict((k.replace('binding:',''), v)
-                for k,v in port_q.items() if k.startswith('binding:'))
-            for k,v in vmi_binding_kvps.items():
+            vmi_binding_kvps = dict(
+                (k.replace('binding:', ''), v)
+                for k, v in port_q.items() if k.startswith('binding:'))
+            for k, v in vmi_binding_kvps.items():
                 vmi_obj.add_virtual_machine_interface_bindings(
                     vnc_api.KeyValuePair(key=k, value=v))
 
@@ -608,12 +605,10 @@ class VMInterfaceMixin(object):
                         'IpAddressGenerationFailure',
                         net_id=vn_obj.get_uuid(), resource='port')
             except vnc_exc.PermissionDenied:
-                   self._raise_contrail_exception(
-                           'IpAddressInUse', net_id=vn_obj.get_uuid(),
-                           ip_address=fixed_ip.get('ip_address'), resource='port')
+                self._raise_contrail_exception(
+                    'IpAddressInUse', net_id=vn_obj.get_uuid(),
+                    ip_address=fixed_ip.get('ip_address'), resource='port')
 
-
-        iips_total = list(created_iip_ids)
         for stale_ip, stale_id in stale_ip_ids.items():
             ip_handler.delete_iip_obj(stale_id)
 

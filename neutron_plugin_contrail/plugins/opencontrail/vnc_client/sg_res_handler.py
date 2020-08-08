@@ -161,7 +161,7 @@ class SecurityGroupGetHandler(SecurityGroupBaseGet, SecurityGroupMixin):
         else:
             project_uuid = None
 
-        obj_uuids=None
+        obj_uuids = None
         if filters and 'id' in filters:
             obj_uuids = filters['id']
 

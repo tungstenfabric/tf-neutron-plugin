@@ -86,7 +86,7 @@ class RoundRobinApiServers(object):
         self.api_servers = cfg.CONF.APISERVER.api_server_ip.split()
         self.index = -1
 
-    def get(self,api_servers):
+    def get(self, api_servers):
         # use the next host in the list
         self.index += 1
         if self.index >= len(api_servers):
@@ -96,6 +96,7 @@ class RoundRobinApiServers(object):
 
     def len(self):
         return len(self.api_servers)
+
 
 def register_vnc_api_options():
     """Register Contrail Neutron core plugin configuration flags"""
@@ -121,9 +122,10 @@ def vnc_api_is_authenticated(api_server_ips):
         )
 
         try:
-            response = requests.get(url,
+            response = requests.get(
+                url,
                 timeout=(cfg.CONF.APISERVER.connection_timeout,
-                            cfg.CONF.APISERVER.timeout),
+                         cfg.CONF.APISERVER.timeout),
                 verify=cfg.CONF.APISERVER.get('cafile', False))
         except requests.exceptions.RequestException as e:
             LOG.warning("Failed connecting to API server: %s" % e)

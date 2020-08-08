@@ -30,7 +30,7 @@ class MockVnc(object):
 
     def _break_method(self, method):
         rin = method.rindex('_')
-        return (method[:rin], method[rin+1:])
+        return (method[:rin], method[rin + 1:])
 
     class Callables(object):
         def __init__(self, resource_type, resource,
@@ -250,8 +250,7 @@ class MockVnc(object):
                 if not obj.get_instance_ip_address():
                     subnet = None
                     if not obj.subnet_uuid:
-                        subnet = vn_obj.get_network_ipam_refs(
-                            )[0]['attr'].get_ipam_subnets()[0]
+                        subnet = vn_obj.get_network_ipam_refs()[0]['attr'].get_ipam_subnets()[0]
                         obj.subnet_uuid = subnet.subnet_uuid
                     else:
                         for ipams in vn_obj.get_network_ipam_refs():
@@ -293,8 +292,7 @@ class MockVnc(object):
                                 break
                     subnet_cidr = '%s/%s' % (
                         subnet.subnet.ip_prefix, subnet.subnet.ip_prefix_len)
-                    if (netaddr.IPAddress(obj.get_instance_ip_address(
-                            )) not in netaddr.IPNetwork(subnet_cidr)):
+                    if (netaddr.IPAddress(obj.get_instance_ip_address()) not in netaddr.IPNetwork(subnet_cidr)):
                         rc = MockVnc.DeleteCallables(
                             self._resource_type,
                             self._resource,

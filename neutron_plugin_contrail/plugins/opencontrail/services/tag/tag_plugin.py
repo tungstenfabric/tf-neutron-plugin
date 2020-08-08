@@ -16,7 +16,6 @@ from neutron_lib.plugins import directory
 
 from neutron.db import standard_attr
 from neutron.extensions import tagging
-from neutron.objects import tag as tag_obj
 
 
 # Taggable resources

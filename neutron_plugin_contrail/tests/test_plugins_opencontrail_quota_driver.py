@@ -1,8 +1,8 @@
 import mock
 import unittest
-import uuid
 
 from neutron_plugin_contrail.plugins.opencontrail.quota.driver import QuotaDriver
+
 
 class ContrailPluginQuotaDriverTest(unittest.TestCase):
     def setUp(self):
@@ -20,15 +20,16 @@ class ContrailPluginQuotaDriverTest(unittest.TestCase):
         class MockResource():
             name = 'default'
             default = -1
-            def __init__(self, name = 'default', default = -1):
+
+            def __init__(self, name='default', default=-1):
                 self.name = name
                 self.default = default
-            
+
         driver = QuotaDriver()
         ctx = MockContext()
 
         foo_quotas = {'network': 5}
-        default_quotas = {'network': MockResource('network', 5) }
+        default_quotas = {'network': MockResource('network', 5)}
         target_tenant = 'f00dbeef012f411b89d68928ee8703ee'
 
         with mock.patch.object(QuotaDriver,

@@ -151,7 +151,7 @@ class SecurityGroupRuleGetHandler(res_handler.ResourceGetHandler,
             return
 
         if filters:
-            filter_ids  = [id for id in filters.get('id', []) if filters]
+            filter_ids = [id for id in filters.get('id', [])]
         else:
             filter_ids = None
         for sg_rule in sgr_entries.get_policy_rule():
