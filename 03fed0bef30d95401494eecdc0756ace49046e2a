@@ -16,6 +16,24 @@
       "revId": "03fed0bef30d95401494eecdc0756ace49046e2a",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8fa358e7_131d2ea9",
+        "filename": "neutron_plugin_contrail/common/utils.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 578
+      },
+      "writtenOn": "2020-08-10T05:46:29Z",
+      "side": 1,
+      "message": "My understanding of this function is that:\n- If one of many API server instance requires credentials we can assume all of them require credentials\n- Function can only return True/False or raise for status from the last checked server\n\nWhat my change does is that:\n- It raises on first failing API instance and can return None which now I\u0027m considering a bug\n\nIf we want to keep original logic I need to fix it by creating empty \"response\" variable before loop and it will work as designed previously.\n\nThank you for your review.",
+      "parentUuid": "8b031cbd_14b0757a",
+      "revId": "03fed0bef30d95401494eecdc0756ace49046e2a",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
     }
   ]
 }
