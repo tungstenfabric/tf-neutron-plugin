@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66d93085_5c396191",
+        "filename": "neutron_plugin_contrail/common/utils.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-08-14T13:07:09Z",
+      "side": 1,
+      "message": "this will lead to another error.\nif all api servers raises exception then response will still be None and calling method on None object will raise another error.",
+      "revId": "795bac26f1fabde95b2c4727649529bb8d96621a",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
