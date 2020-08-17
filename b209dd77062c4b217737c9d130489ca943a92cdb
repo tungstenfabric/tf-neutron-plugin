@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52e536f9_ffc3c97d",
+        "filename": "neutron_plugin_contrail/common/utils.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-08-17T06:49:36Z",
+      "side": 1,
+      "message": "is it correct to return None if api_server_ips is empty?\nwould it be better to raise different exception?",
+      "revId": "b209dd77062c4b217737c9d130489ca943a92cdb",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
