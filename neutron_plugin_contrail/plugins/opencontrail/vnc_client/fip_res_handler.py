@@ -14,16 +14,19 @@
 
 import uuid
 
-from vnc_api import exceptions as vnc_exc
 try:
     from neutron_lib import constants
 except ImportError:
     from neutron.plugins.common import constants
 from vnc_api import vnc_api
+from vnc_api import exceptions as vnc_exc
 
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.router_res_handler as router_handler
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.vmi_res_handler as vmi_handler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    ResourceCreateHandler,
+    ResourceDeleteHandler,
+    ResourceGetHandler,
+    ResourceUpdateHandler,
+)
 
 
 class FloatingIpMixin(object):
@@ -37,8 +40,8 @@ class FloatingIpMixin(object):
                 self._raise_contrail_exception('FloatingIPNotFound',
                                                floatingip_id=fip_q['id'])
 
-        vmi_get_handler = vmi_handler.VMInterfaceGetHandler(
-            self._vnc_lib)
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.vmi_res_handler import VMInterfaceGetHandler
+        vmi_get_handler = VMInterfaceGetHandler(self._vnc_lib)
         port_id = fip_q.get('port_id')
         if port_id:
             try:
@@ -80,9 +83,10 @@ class FloatingIpMixin(object):
         return fip_obj
 
     def _fip_obj_to_neutron_dict(self, fip_obj, fields=None):
-        fip_q_dict = {}
-        vmi_get_handler = vmi_handler.VMInterfaceGetHandler(
-            self._vnc_lib)
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.vmi_res_handler import VMInterfaceGetHandler
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.router_res_handler import LogicalRouterGetHandler
+
+        vmi_get_handler = VMInterfaceGetHandler(self._vnc_lib)
 
         floating_net_id = self._vnc_lib.fq_name_to_id(
             'virtual-network', fip_obj.get_fq_name()[:-2])
@@ -111,11 +115,11 @@ class FloatingIpMixin(object):
                 pass
 
         if vmi_obj:
-            router_get_handler = router_handler.LogicalRouterGetHandler(
-                self._vnc_lib)
+            router_get_handler = LogicalRouterGetHandler(self._vnc_lib)
             router_id = router_get_handler.get_vmi_obj_router_id(vmi_obj,
                                                                  project_id=tenant_id)
 
+        fip_q_dict = {}
         fip_q_dict['id'] = fip_obj.uuid
         fip_q_dict['tenant_id'] = tenant_id
         fip_q_dict['floating_ip_address'] = fip_obj.get_floating_ip_address()
@@ -131,8 +135,7 @@ class FloatingIpMixin(object):
         return fip_q_dict
 
 
-class FloatingIpCreateHandler(res_handler.ResourceCreateHandler,
-                              FloatingIpMixin):
+class FloatingIpCreateHandler(ResourceCreateHandler, FloatingIpMixin):
     resource_create_method = 'floating_ip_create'
 
     def _create_fip_obj(self, fip_q):
@@ -181,7 +184,7 @@ class FloatingIpCreateHandler(res_handler.ResourceCreateHandler,
         return self._fip_obj_to_neutron_dict(fip_obj)
 
 
-class FloatingIpDeleteHandler(res_handler.ResourceDeleteHandler):
+class FloatingIpDeleteHandler(ResourceDeleteHandler):
     resource_delete_method = 'floating_ip_delete'
 
     def resource_delete(self, context, fip_id):
@@ -192,8 +195,7 @@ class FloatingIpDeleteHandler(res_handler.ResourceDeleteHandler):
                                            floatingip_id=fip_id)
 
 
-class FloatingIpUpdateHandler(res_handler.ResourceUpdateHandler,
-                              FloatingIpMixin):
+class FloatingIpUpdateHandler(ResourceUpdateHandler, FloatingIpMixin):
     resource_update_method = 'floating_ip_update'
 
     def resource_update(self, context, fip_id, fip_q):
@@ -204,7 +206,7 @@ class FloatingIpUpdateHandler(res_handler.ResourceUpdateHandler,
         return self._fip_obj_to_neutron_dict(fip_obj)
 
 
-class FloatingIpGetHandler(res_handler.ResourceGetHandler, FloatingIpMixin):
+class FloatingIpGetHandler(ResourceGetHandler, FloatingIpMixin):
     resource_list_method = 'floating_ips_list'
     resource_get_method = 'floating_ip_read'
 

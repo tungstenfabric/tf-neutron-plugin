@@ -15,7 +15,12 @@
 from vnc_api import exceptions as vnc_exc
 from vnc_api import vnc_api
 
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    ResourceCreateHandler,
+    ResourceDeleteHandler,
+    ResourceGetHandler,
+    ResourceUpdateHandler,
+)
 
 
 class RouteTableMixin(object):
@@ -40,7 +45,7 @@ class RouteTableMixin(object):
     # end _route_table_vnc_to_neutron
 
 
-class RouteTableBaseGet(res_handler.ResourceGetHandler):
+class RouteTableBaseGet(ResourceGetHandler):
     resource_get_method = "route_table_read"
 
 
@@ -108,7 +113,7 @@ class RouteTableGetHandler(RouteTableBaseGet,
         return ret_list
 
 
-class RouteTableCreateHandler(res_handler.ResourceCreateHandler):
+class RouteTableCreateHandler(ResourceCreateHandler):
     resource_create_method = "route_table_create"
 
     def resource_create(self, context, rt_q):
@@ -142,7 +147,7 @@ class RouteTableCreateHandler(res_handler.ResourceCreateHandler):
         return ret_rt_q
 
 
-class RouteTableUpdateHandler(res_handler.ResourceUpdateHandler,
+class RouteTableUpdateHandler(ResourceUpdateHandler,
                               RouteTableBaseGet,
                               RouteTableMixin):
     resource_update_method = "route_table_update"
@@ -174,7 +179,7 @@ class RouteTableUpdateHandler(res_handler.ResourceUpdateHandler,
         return self._route_table_vnc_to_neutron(rt_obj)
 
 
-class RouteTableDeleteHandler(res_handler.ResourceDeleteHandler):
+class RouteTableDeleteHandler(ResourceDeleteHandler):
     resource_delete_method = "route_table_delete"
 
     def resource_delete(self, context, rt_id):
