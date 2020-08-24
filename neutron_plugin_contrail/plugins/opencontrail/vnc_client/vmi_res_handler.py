@@ -11,23 +11,27 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
 import uuid
-
-from vnc_api import exceptions as vnc_exc
 import eventlet
 import netaddr
+
 try:
     from neutron_lib import constants
 except ImportError:
     from neutron.plugins.common import constants
 from vnc_api import vnc_api
+from vnc_api import exceptions as vnc_exc
 
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import fip_res_handler
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.sg_res_handler as sg_handler
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.subnet_res_handler as subnet_handler
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.vn_res_handler as vn_handler
+from neutron_plugin_contrail.common.utils import get_tenant_id
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    InstanceIpHandler,
+    ResourceCreateHandler,
+    ResourceDeleteHandler,
+    ResourceGetHandler,
+    ResourceUpdateHandler,
+    SGHandler,
+    VMachineHandler
+)
 
 
 class VMInterfaceMixin(object):
@@ -50,6 +54,8 @@ class VMInterfaceMixin(object):
 
     @staticmethod
     def _get_vmi_memo_req_dict(vn_objs, iip_objs, vm_objs):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.subnet_res_handler import SubnetHandler
+
         memo_req = {'networks': {},
                     'subnets': {},
                     'virtual-machines': {},
@@ -58,7 +64,7 @@ class VMInterfaceMixin(object):
         for vn_obj in vn_objs or []:
             memo_req['networks'][vn_obj.uuid] = vn_obj
             memo_req['subnets'][vn_obj.uuid] = (
-                subnet_handler.SubnetHandler.get_vn_subnets(vn_obj))
+                SubnetHandler.get_vn_subnets(vn_obj))
 
         for iip_obj in iip_objs or []:
             memo_req['instance-ips'][iip_obj.uuid] = iip_obj
@@ -253,6 +259,8 @@ class VMInterfaceMixin(object):
 
     def _vmi_to_neutron_port(self, vmi_obj, port_req_memo=None,
                              extensions_enabled=False, fields=None):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.subnet_res_handler import SubnetHandler
+
         port_q_dict = {}
 
         if not getattr(vmi_obj, 'display_name'):
@@ -285,8 +293,7 @@ class VMInterfaceMixin(object):
         except KeyError:
             vn_obj = self._vnc_lib.virtual_network_read(id=net_id)
             port_req_memo['networks'][net_id] = vn_obj
-            subnets_info = (
-                subnet_handler.SubnetHandler.get_vn_subnets(vn_obj))
+            subnets_info = (SubnetHandler.get_vn_subnets(vn_obj))
             port_req_memo['subnets'][net_id] = subnets_info
 
         if vmi_obj.parent_type != "project":
@@ -317,8 +324,7 @@ class VMInterfaceMixin(object):
         port_q_dict['security_groups'] = []
         sg_refs = vmi_obj.get_security_group_refs()
         # read the no rule sg
-        no_rule_sg = res_handler.SGHandler(
-            self._vnc_lib).get_no_rule_security_group()
+        no_rule_sg = SGHandler(self._vnc_lib).get_no_rule_security_group()
         for sg_ref in sg_refs or []:
             if no_rule_sg and sg_ref['uuid'] == no_rule_sg.uuid:
                 # hide the internal sg
@@ -369,7 +375,7 @@ class VMInterfaceMixin(object):
                 delete_vm_list.append(vm_ref)
 
         if instance_name or delete_vm_list:
-            vm_handler = res_handler.VMachineHandler(self._vnc_lib)
+            vm_handler = VMachineHandler(self._vnc_lib)
 
         if instance_name:
             try:
@@ -398,7 +404,7 @@ class VMInterfaceMixin(object):
         # When there is no-security-group for a port,the internal
         # no_rule group should be used.
         if not sec_group_list:
-            sg_obj = res_handler.SGHandler(
+            sg_obj = SGHandler(
                 self._vnc_lib).get_no_rule_security_group()
             vmi_obj.add_security_group(sg_obj)
 
@@ -451,7 +457,7 @@ class VMInterfaceMixin(object):
         ip_back_refs = getattr(vmi_obj, 'instance_ip_back_refs', None)
         vmi_obj_ips = []
         if ip_back_refs:
-            ip_handler = res_handler.InstanceIpHandler(self._vnc_lib)
+            ip_handler = InstanceIpHandler(self._vnc_lib)
             for ip_back_ref in ip_back_refs:
                 try:
                     ip_obj = ip_handler.get_iip_obj(id=ip_back_ref['uuid'])
@@ -462,7 +468,7 @@ class VMInterfaceMixin(object):
 
     def _check_vmi_fixed_ips(self, vmi_obj, fixed_ips, net_id):
         vmi_obj_ips = self._get_vmi_ip_list(vmi_obj)
-        ip_handler = res_handler.InstanceIpHandler(self._vnc_lib)
+        ip_handler = InstanceIpHandler(self._vnc_lib)
         for fixed_ip in fixed_ips or []:
             ip_addr = fixed_ip.get('ip_address')
             if not ip_addr or ip_addr in vmi_obj_ips:
@@ -551,7 +557,7 @@ class VMInterfaceMixin(object):
                 subnets[subnet_vnc.subnet_uuid] = cidr
 
         stale_ip_ids = {}
-        ip_handler = res_handler.InstanceIpHandler(self._vnc_lib)
+        ip_handler = InstanceIpHandler(self._vnc_lib)
         for iip in getattr(vmi_obj, 'instance_ip_back_refs', []):
             iip_obj = ip_handler.get_iip_obj(id=iip['uuid'])
             ip_addr = iip_obj.get_instance_ip_address()
@@ -613,9 +619,11 @@ class VMInterfaceMixin(object):
             ip_handler.delete_iip_obj(stale_id)
 
     def get_vmi_tenant_id(self, vmi_obj):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.vn_res_handler import VNetworkGetHandler
+
         if vmi_obj.parent_type != "project":
             net_id = vmi_obj.get_virtual_network_refs()[0]['uuid']
-            vn_get_handler = vn_handler.VNetworkGetHandler(self._vnc_lib)
+            vn_get_handler = VNetworkGetHandler(self._vnc_lib)
             vn_obj = vn_get_handler.get_vn_obj(id=net_id)
             return vn_get_handler.get_vn_tenant_id(vn_obj)
 
@@ -634,23 +642,25 @@ class VMInterfaceMixin(object):
                         resource='port')
 
 
-class VMInterfaceCreateHandler(res_handler.ResourceCreateHandler,
-                               VMInterfaceMixin):
+class VMInterfaceCreateHandler(ResourceCreateHandler, VMInterfaceMixin):
     resource_create_method = 'virtual_machine_interface_create'
 
     def _get_tenant_id_for_create(self, context, resource):
         if context['is_admin'] and 'tenant_id' in resource:
             tenant_id = resource['tenant_id']
         elif ('tenant_id' in resource and
-              resource['tenant_id'] != context['tenant']):
-            reason = ('Cannot create resource for another tenant')
-            self._raise_contrail_exception('AdminRequired', reason=reason,
-                                           resource='port')
+              resource['tenant_id'] != get_tenant_id(context)):
+            self._raise_contrail_exception(
+                'AdminRequired',
+                reason='Cannot create resource for another tenant',
+                resource='port')
         else:
-            tenant_id = context['tenant']
+            tenant_id = get_tenant_id(context)
         return tenant_id
 
     def _create_vmi_obj(self, port_q, vn_obj):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.sg_res_handler import SecurityGroupHandler
+
         project_id = self._project_id_neutron_to_vnc(port_q['tenant_id'])
         try:
             proj_obj = self._project_read(proj_id=project_id)
@@ -672,7 +682,7 @@ class VMInterfaceCreateHandler(res_handler.ResourceCreateHandler,
         if ('security_groups' not in port_q or
                 port_q['security_groups'].__class__ is object):
             sg_obj = vnc_api.SecurityGroup("default", proj_obj)
-            uid = sg_handler.SecurityGroupHandler(
+            uid = SecurityGroupHandler(
                 self._vnc_lib)._ensure_default_security_group_exists(
                 proj_obj.uuid)
             sg_obj.uuid = uid
@@ -748,8 +758,7 @@ class VMInterfaceCreateHandler(res_handler.ResourceCreateHandler,
         return ret_port_q
 
 
-class VMInterfaceUpdateHandler(res_handler.ResourceUpdateHandler,
-                               VMInterfaceMixin):
+class VMInterfaceUpdateHandler(ResourceUpdateHandler, VMInterfaceMixin):
     resource_update_method = 'virtual_machine_interface_update'
 
     def resource_update(self, context, port_id, port_q):
@@ -785,11 +794,12 @@ class VMInterfaceUpdateHandler(res_handler.ResourceUpdateHandler,
         return ret_port_q
 
 
-class VMInterfaceDeleteHandler(res_handler.ResourceDeleteHandler,
-                               VMInterfaceMixin):
+class VMInterfaceDeleteHandler(ResourceDeleteHandler, VMInterfaceMixin):
     resource_delete_method = 'virtual_machine_interface_delete'
 
     def resource_delete(self, context, port_id):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.fip_res_handler import FloatingIpHandler
+
         try:
             vmi_obj = self._resource_get(back_refs=True, id=port_id)
         except vnc_exc.NoIdError:
@@ -812,7 +822,7 @@ class VMInterfaceDeleteHandler(res_handler.ResourceDeleteHandler,
 
         # release instance IP address
         iip_back_refs = list((getattr(vmi_obj, 'instance_ip_back_refs', [])))
-        ip_handler = res_handler.InstanceIpHandler(self._vnc_lib)
+        ip_handler = InstanceIpHandler(self._vnc_lib)
 
         for iip_back_ref in iip_back_refs or []:
             # if name contains IP address then this is shared ip
@@ -827,7 +837,7 @@ class VMInterfaceDeleteHandler(res_handler.ResourceDeleteHandler,
         # disassociate any floating IP used by instance
         fip_back_refs = getattr(vmi_obj, 'floating_ip_back_refs', None)
         if fip_back_refs:
-            fip_handler = fip_res_handler.FloatingIpHandler(self._vnc_lib)
+            fip_handler = FloatingIpHandler(self._vnc_lib)
             for fip_back_ref in fip_back_refs:
                 fip_handler.resource_update(context, fip_back_ref['uuid'],
                                             {'port_id': None})
@@ -849,7 +859,7 @@ class VMInterfaceDeleteHandler(res_handler.ResourceDeleteHandler,
             pass
 
 
-class VMInterfaceGetHandler(res_handler.ResourceGetHandler, VMInterfaceMixin):
+class VMInterfaceGetHandler(ResourceGetHandler, VMInterfaceMixin):
     resource_list_method = 'virtual_machine_interfaces_list'
     resource_get_method = 'virtual_machine_interface_read'
     back_ref_fields = ['logical_router_back_refs', 'instance_ip_back_refs',
@@ -858,7 +868,9 @@ class VMInterfaceGetHandler(res_handler.ResourceGetHandler, VMInterfaceMixin):
     # returns vm objects, net objects, and instance ip objects
     def _get_vmis_nets_ips(self, context, project_ids=None,
                            device_ids=None, vmi_uuids=None, vn_ids=None):
-        vn_list_handler = vn_handler.VNetworkGetHandler(self._vnc_lib)
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.vn_res_handler import VNetworkGetHandler
+
+        vn_list_handler = VNetworkGetHandler(self._vnc_lib)
         pool = eventlet.GreenPool()
         vn_objs_t = pool.spawn(vn_list_handler.get_vn_obj_list,
                                parent_id=project_ids, detail=True)
@@ -895,7 +907,7 @@ class VMInterfaceGetHandler(res_handler.ResourceGetHandler, VMInterfaceMixin):
             vmi_objs.extend(vmi_obj_uuids_t._exit_event._result or [])
 
         vmis_ids = [vmi.uuid for vmi in vmi_objs]
-        iip_list_handler = res_handler.InstanceIpHandler(self._vnc_lib)
+        iip_list_handler = InstanceIpHandler(self._vnc_lib)
         iips_objs = iip_list_handler.get_iip_obj_list(back_ref_id=vmis_ids,
                                                       detail=True)
 
@@ -949,9 +961,10 @@ class VMInterfaceGetHandler(res_handler.ResourceGetHandler, VMInterfaceMixin):
 
         project_ids = []
         tenant_ids = []
-        if not context['is_admin']:
-            tenant_ids = [context['tenant']]
-            project_ids = [self._project_id_neutron_to_vnc(context['tenant'])]
+        if not context['is_admin'] and 'tenant' in context:
+            tenant_ids = [get_tenant_id(context)]
+            project_ids = [
+                self._project_id_neutron_to_vnc(get_tenant_id(context))]
         elif 'tenant_id' in filters:
             tenant_ids = filters['tenant_id']
             project_ids = self._validate_project_ids(context,
