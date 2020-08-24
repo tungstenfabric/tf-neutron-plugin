@@ -15,7 +15,13 @@
 from vnc_api import exceptions as vnc_exc
 from vnc_api import vnc_api
 
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
+from neutron_plugin_contrail.common.utils import get_tenant_id
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    ResourceCreateHandler,
+    ResourceDeleteHandler,
+    ResourceGetHandler,
+    ResourceUpdateHandler,
+)
 
 
 class RouteTableMixin(object):
@@ -26,6 +32,7 @@ class RouteTableMixin(object):
         rt_q_dict['id'] = rt_obj.uuid
         rt_q_dict['tenant_id'] = self._project_id_vnc_to_neutron(
             rt_obj.parent_uuid)
+        rt_q_dict['project_id'] = rt_q_dict['tenant_id']
         rt_q_dict['name'] = rt_obj.name
         rt_q_dict['fq_name'] = rt_obj.fq_name
 
@@ -40,7 +47,7 @@ class RouteTableMixin(object):
     # end _route_table_vnc_to_neutron
 
 
-class RouteTableBaseGet(res_handler.ResourceGetHandler):
+class RouteTableBaseGet(ResourceGetHandler):
     resource_get_method = "route_table_read"
 
 
@@ -82,7 +89,7 @@ class RouteTableGetHandler(RouteTableBaseGet,
                 project_rts = self.resource_list_by_project(p_id)
                 all_rts.append(project_rts)
         elif filters and 'name' in filters:
-            p_id = self._project_id_neutron_to_vnc(context['tenant'])
+            p_id = self._project_id_neutron_to_vnc(get_tenant_id(context))
             project_rts = self.resource_list_by_project(p_id)
             all_rts.append(project_rts)
         else:  # no filters
@@ -108,7 +115,7 @@ class RouteTableGetHandler(RouteTableBaseGet,
         return ret_list
 
 
-class RouteTableCreateHandler(res_handler.ResourceCreateHandler):
+class RouteTableCreateHandler(ResourceCreateHandler):
     resource_create_method = "route_table_create"
 
     def resource_create(self, context, rt_q):
@@ -142,7 +149,7 @@ class RouteTableCreateHandler(res_handler.ResourceCreateHandler):
         return ret_rt_q
 
 
-class RouteTableUpdateHandler(res_handler.ResourceUpdateHandler,
+class RouteTableUpdateHandler(ResourceUpdateHandler,
                               RouteTableBaseGet,
                               RouteTableMixin):
     resource_update_method = "route_table_update"
@@ -174,7 +181,7 @@ class RouteTableUpdateHandler(res_handler.ResourceUpdateHandler,
         return self._route_table_vnc_to_neutron(rt_obj)
 
 
-class RouteTableDeleteHandler(res_handler.ResourceDeleteHandler):
+class RouteTableDeleteHandler(ResourceDeleteHandler):
     resource_delete_method = "route_table_delete"
 
     def resource_delete(self, context, rt_id):

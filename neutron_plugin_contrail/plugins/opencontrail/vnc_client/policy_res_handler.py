@@ -15,7 +15,12 @@
 from vnc_api import exceptions as vnc_exc
 from vnc_api import vnc_api
 
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    ResourceCreateHandler,
+    ResourceDeleteHandler,
+    ResourceGetHandler,
+    ResourceUpdateHandler,
+)
 
 
 class PolicyMixin(object):
@@ -27,6 +32,7 @@ class PolicyMixin(object):
         policy_q_dict['name'] = policy_obj.name
         policy_q_dict['tenant_id'] = self._project_id_vnc_to_neutron(
             policy_obj.parent_uuid)
+        policy_q_dict['project_id'] = policy_q_dict['tenant_id']
         policy_q_dict['entries'] = policy_q_dict.pop('network_policy_entries',
                                                      None)
         net_back_refs = policy_obj.get_virtual_network_back_refs()
@@ -48,7 +54,7 @@ class PolicyMixin(object):
     # end _policy_neutron_to_vnc
 
 
-class PolicyBaseGet(res_handler.ResourceGetHandler):
+class PolicyBaseGet(ResourceGetHandler):
     resource_get_method = "network_policy_read"
 
 
@@ -111,7 +117,7 @@ class PolicyGetHandler(PolicyBaseGet, PolicyMixin):
         return len(policy_info)
 
 
-class PolicyCreateHandler(res_handler.ResourceCreateHandler, PolicyMixin):
+class PolicyCreateHandler(ResourceCreateHandler, PolicyMixin):
     resource_create_method = "network_policy_create"
 
     def resource_create(self, context, policy_q):
@@ -137,8 +143,7 @@ class PolicyCreateHandler(res_handler.ResourceCreateHandler, PolicyMixin):
         return self._policy_vnc_to_neutron(policy_obj)
 
 
-class PolicyUpdateHandler(res_handler.ResourceUpdateHandler,
-                          PolicyBaseGet, PolicyMixin):
+class PolicyUpdateHandler(ResourceUpdateHandler, PolicyBaseGet, PolicyMixin):
     resource_update_method = "network_policy_update"
 
     def resource_update(self, context, policy_id, policy_q):
@@ -154,7 +159,7 @@ class PolicyUpdateHandler(res_handler.ResourceUpdateHandler,
         return self._policy_vnc_to_neutron(policy_obj)
 
 
-class PolicyDeleteHandler(res_handler.ResourceDeleteHandler):
+class PolicyDeleteHandler(ResourceDeleteHandler):
     resource_delete_method = "network_policy_delete"
 
     def resource_delete(self, context, policy_id):

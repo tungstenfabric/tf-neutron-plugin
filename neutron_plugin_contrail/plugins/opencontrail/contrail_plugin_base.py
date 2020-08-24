@@ -14,7 +14,6 @@
 #
 # @author: Hampapur Ajay, Praneet Bachheti, Rudra Rugge, Atul Moghe
 
-
 try:
     from neutron.api.v2.attributes import ATTR_NOT_SPECIFIED
 except Exception:

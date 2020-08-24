@@ -19,9 +19,14 @@ import netaddr
 from vnc_api import vnc_api
 from vnc_api import exceptions as vnc_exc
 
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import ContrailResourceHandler
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.vn_res_handler as vn_handler
+from neutron_plugin_contrail.common.utils import get_tenant_id
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    ContrailResourceHandler,
+    ResourceCreateHandler,
+    ResourceDeleteHandler,
+    ResourceGetHandler,
+    ResourceUpdateHandler,
+)
 from neutron_plugin_contrail.plugins.opencontrail.contrail_plugin_base import NEUTRON_CONTRAIL_PREFIX
 
 
@@ -297,6 +302,7 @@ class SubnetMixin(object):
             sn_q_dict['name'] = ''
         sn_q_dict['tenant_id'] = self._project_id_vnc_to_neutron(
             vn_obj.parent_uuid)
+        sn_q_dict['project_id'] = sn_q_dict['tenant_id']
         sn_q_dict['network_id'] = vn_obj.uuid
         sn_q_dict['ipv6_ra_mode'] = None
         sn_q_dict['ipv6_address_mode'] = None
@@ -377,7 +383,7 @@ class SubnetMixin(object):
             subnet_hr_handler.sync_routes(vn_obj, subnet_vnc.subnet_uuid, subnet_cidr, host_routes)
 
 
-class SubnetCreateHandler(res_handler.ResourceCreateHandler, SubnetMixin):
+class SubnetCreateHandler(ResourceCreateHandler, SubnetMixin):
 
     def _get_netipam_obj(self, ipam_fq_name=None, vn_obj=None):
         if ipam_fq_name:
@@ -451,7 +457,7 @@ class SubnetCreateHandler(res_handler.ResourceCreateHandler, SubnetMixin):
         return subnet_info
 
 
-class SubnetDeleteHandler(res_handler.ResourceDeleteHandler, SubnetMixin):
+class SubnetDeleteHandler(ResourceDeleteHandler, SubnetMixin):
 
     def resource_delete(self, context, subnet_id):
         subnet_key = self._subnet_vnc_read_mapping(id=subnet_id)
@@ -476,7 +482,7 @@ class SubnetDeleteHandler(res_handler.ResourceDeleteHandler, SubnetMixin):
                         resource='subnet')
 
 
-class SubnetGetHandler(res_handler.ResourceGetHandler, SubnetMixin):
+class SubnetGetHandler(ResourceGetHandler, SubnetMixin):
     resource_list_method = 'virtual_networks_list'
     resource_get_method = 'virtual_network_read'
 
@@ -556,7 +562,9 @@ class SubnetGetHandler(res_handler.ResourceGetHandler, SubnetMixin):
         return ret_subnets
 
     def resource_list(self, context, filters, fields=None):
-        vn_get_handler = vn_handler.VNetworkGetHandler(self._vnc_lib)
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.vn_res_handler import VNetworkGetHandler
+
+        vn_get_handler = VNetworkGetHandler(self._vnc_lib)
         all_vn_objs = []
         if filters and 'id' in filters:
             # required subnets are specified,
@@ -571,7 +579,7 @@ class SubnetGetHandler(res_handler.ResourceGetHandler, SubnetMixin):
                 obj_uuids=net_ids, detail=True))
         else:
             if not context['is_admin']:
-                proj_id = context['tenant']
+                proj_id = get_tenant_id(context)
             else:
                 proj_id = None
             vn_objs = vn_get_handler.get_vn_list_project(proj_id)
@@ -583,7 +591,7 @@ class SubnetGetHandler(res_handler.ResourceGetHandler, SubnetMixin):
                                                          fields=fields)
 
 
-class SubnetUpdateHandler(res_handler.ResourceUpdateHandler, SubnetMixin):
+class SubnetUpdateHandler(ResourceUpdateHandler, SubnetMixin):
     resource_update_method = 'virtual_network_update'
 
     def _subnet_update(self, subnet_q, subnet_id, vn_obj, subnet_vnc,
