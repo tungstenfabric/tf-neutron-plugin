@@ -11,7 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
 import requests
 from six.moves.urllib.parse import urlparse
 
@@ -291,3 +290,14 @@ def get_vnc_api_instance(wait_for_connect=True):
         connection_timeout=cfg.CONF.APISERVER.connection_timeout,
         timeout=cfg.CONF.APISERVER.timeout,
     )
+
+def get_tenant_id(context):
+    tenant_id = context.get('tenant')
+    if tenant_id:
+        return tenant_id
+
+    project_id = context.get('_project_id')
+    if project_id:
+        return project_id
+
+    return None
