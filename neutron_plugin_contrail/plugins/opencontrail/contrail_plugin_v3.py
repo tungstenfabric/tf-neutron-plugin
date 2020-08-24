@@ -11,8 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-
+from __future__ import absolute_import, unicode_literals
 try:
     from neutron.api.v2.attributes import ATTR_NOT_SPECIFIED
 except Exception:
@@ -36,18 +35,18 @@ from eventlet import greenthread
 from neutron_plugin_contrail.common import utils
 import neutron_plugin_contrail.plugins.opencontrail.contrail_plugin_base as plugin_base
 
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import fip_res_handler as fip_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import ipam_res_handler as ipam_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import policy_res_handler as policy_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import route_table_res_handler as route_table_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import router_res_handler as rtr_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import sg_res_handler as sg_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import sgrule_res_handler as sgrule_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import subnet_res_handler as subnet_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import svc_instance_res_handler as svc_instance_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import virtual_router_res_handler as vrouter_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import vmi_res_handler as vmi_handler
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import vn_res_handler as vn_handler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.ipam_res_handler import IPamHandler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.fip_res_handler import FloatingIpHandler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.policy_res_handler import PolicyHandler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.route_table_res_handler import RouteTableHandler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.router_res_handler import LogicalRouterHandler, LogicalRouterInterfaceHandler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.sg_res_handler import SecurityGroupHandler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.sgrule_res_handler import SecurityGroupRuleHandler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.subnet_res_handler import SubnetHandler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.svc_instance_res_handler import SvcInstanceHandler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.virtual_router_res_handler import VirtualRouterHandler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.vmi_res_handler import VMInterfaceHandler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.vn_res_handler import VNetworkHandler
 
 
 LOG = logging.getLogger(__name__)
@@ -67,6 +66,7 @@ class NeutronPluginContrailCoreV3(plugin_base.NeutronPluginContrailCoreBase):
         self.api_servers = utils.RoundRobinApiServers()
 
     def _set_user_auth_token(self):
+        return
         api_server_list = self.api_servers.api_servers[:]
         api_server = self.api_servers.get(api_server_list)
         if not utils.vnc_api_is_authenticated(api_server):
@@ -86,38 +86,38 @@ class NeutronPluginContrailCoreV3(plugin_base.NeutronPluginContrailCoreBase):
         kwargs = {'contrail_extensions_enabled': contrail_extension_enabled,
                   'apply_subnet_host_routes': apply_subnet_host_routes}
 
-        self._res_handlers['network'] = vn_handler.VNetworkHandler(
+        self._res_handlers['network'] = VNetworkHandler(
             self._vnc_lib, **kwargs)
 
-        self._res_handlers['subnet'] = subnet_handler.SubnetHandler(
+        self._res_handlers['subnet'] = SubnetHandler(
             self._vnc_lib, **kwargs)
-        self._res_handlers['port'] = vmi_handler.VMInterfaceHandler(
+        self._res_handlers['port'] = VMInterfaceHandler(
             self._vnc_lib, **kwargs)
-        self._res_handlers['router'] = rtr_handler.LogicalRouterHandler(
+        self._res_handlers['router'] = LogicalRouterHandler(
             self._vnc_lib, **kwargs)
-        self._res_handlers['floatingip'] = fip_handler.FloatingIpHandler(
+        self._res_handlers['floatingip'] = FloatingIpHandler(
             self._vnc_lib, **kwargs)
-        self._res_handlers['security_group'] = sg_handler.SecurityGroupHandler(
+        self._res_handlers['security_group'] = SecurityGroupHandler(
             self._vnc_lib, **kwargs)
         self._res_handlers['security_group_rule'] = (
-            sgrule_handler.SecurityGroupRuleHandler(self._vnc_lib, **kwargs))
+            SecurityGroupRuleHandler(self._vnc_lib, **kwargs))
 
-        self._res_handlers['ipam'] = ipam_handler.IPamHandler(
+        self._res_handlers['ipam'] = IPamHandler(
             self._vnc_lib, **kwargs)
-        self._res_handlers['policy'] = policy_handler.PolicyHandler(
+        self._res_handlers['policy'] = PolicyHandler(
             self._vnc_lib, **kwargs)
         self._res_handlers['route_table'] = (
-            route_table_handler.RouteTableHandler(self._vnc_lib, **kwargs))
-        self._res_handlers['svc'] = svc_instance_handler.SvcInstanceHandler(
+            RouteTableHandler(self._vnc_lib, **kwargs))
+        self._res_handlers['svc'] = SvcInstanceHandler(
             self._vnc_lib, **kwargs)
         self._res_handlers['virtual_router'] = \
-            vrouter_handler.VirtualRouterHandler(self._vnc_lib, **kwargs)
+            VirtualRouterHandler(self._vnc_lib, **kwargs)
 
     def _get_context_dict(self, context):
         return dict(context.__dict__)
 
     def _create_resource(self, res_type, context, res_data):
-        for key, value in res_data[res_type].items():
+        for key, value in res_data[res_type].copy().items():
             if value == ATTR_NOT_SPECIFIED:
                 del res_data[res_type][key]
 
@@ -151,6 +151,9 @@ class NeutronPluginContrailCoreV3(plugin_base.NeutronPluginContrailCoreBase):
             self._get_context_dict(context), filters)
         return {'count': res_count}
 
+    def _update_router_gw_info(self, context, *args, **kwargs):
+        pass
+
     def add_router_interface(self, context, router_id, interface_info):
         """Add interface to a router."""
 
@@ -167,7 +170,7 @@ class NeutronPluginContrailCoreV3(plugin_base.NeutronPluginContrailCoreBase):
         port_id = interface_info.get('port_id')
         subnet_id = interface_info.get('subnet_id')
 
-        rtr_iface_handler = rtr_handler.LogicalRouterInterfaceHandler(
+        rtr_iface_handler = LogicalRouterInterfaceHandler(
             self._vnc_lib)
         return rtr_iface_handler.add_router_interface(
             self._get_context_dict(context), router_id,
@@ -184,7 +187,7 @@ class NeutronPluginContrailCoreV3(plugin_base.NeutronPluginContrailCoreBase):
         subnet_id = interface_info.get('subnet_id')
 
         self._set_user_auth_token()
-        rtr_iface_handler = rtr_handler.LogicalRouterInterfaceHandler(
+        rtr_iface_handler = LogicalRouterInterfaceHandler(
             self._vnc_lib)
         return rtr_iface_handler.remove_router_interface(
             self._get_context_dict(context), router_id, port_id=port_id,

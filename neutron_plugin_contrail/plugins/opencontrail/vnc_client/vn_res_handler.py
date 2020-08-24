@@ -11,16 +11,20 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-from vnc_api import exceptions as vnc_exc
 try:
     from neutron_lib import constants
 except ImportError:
     from neutron.plugins.common import constants
 from vnc_api import vnc_api
+from vnc_api import exceptions as vnc_exc
 
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.vmi_res_handler as vmi_handler
+from neutron_plugin_contrail.common.utils import get_tenant_id
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    ResourceCreateHandler,
+    ResourceDeleteHandler,
+    ResourceGetHandler,
+    ResourceUpdateHandler,
+)
 
 
 class VNetworkMixin(object):
@@ -127,6 +131,7 @@ class VNetworkMixin(object):
 
         net_q_dict['tenant_id'] = self._project_id_vnc_to_neutron(
             vn_obj.parent_uuid)
+        net_q_dict['project_id'] = net_q_dict['tenant_id']
         net_q_dict['admin_state_up'] = id_perms.enable
         net_q_dict['shared'] = True if vn_obj.is_shared else False
         net_q_dict['status'] = (constants.NET_STATUS_ACTIVE
@@ -150,7 +155,7 @@ class VNetworkMixin(object):
         return self._project_id_vnc_to_neutron(vn_obj.parent_uuid)
 
 
-class VNetworkCreateHandler(res_handler.ResourceCreateHandler, VNetworkMixin):
+class VNetworkCreateHandler(ResourceCreateHandler, VNetworkMixin):
     resource_create_method = 'virtual_network_create'
 
     def create_vn_obj(self, network_q):
@@ -199,7 +204,7 @@ class VNetworkCreateHandler(res_handler.ResourceCreateHandler, VNetworkMixin):
         return ret_network_q
 
 
-class VNetworkUpdateHandler(res_handler.ResourceUpdateHandler, VNetworkMixin):
+class VNetworkUpdateHandler(ResourceUpdateHandler, VNetworkMixin):
     resource_update_method = 'virtual_network_update'
 
     def _update_external_router_attr(self, router_external, vn_obj):
@@ -217,9 +222,11 @@ class VNetworkUpdateHandler(res_handler.ResourceUpdateHandler, VNetworkMixin):
                         'NetworkInUse', net_id=vn_obj.uuid, resource='network')
 
     def _validate_shared_attr(self, is_shared, vn_obj):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.vmi_res_handler import VMInterfaceHandler
+
         if not is_shared and vn_obj.is_shared:
             for vmi in vn_obj.get_virtual_machine_interface_back_refs() or []:
-                vmi_obj = vmi_handler.VMInterfaceHandler(
+                vmi_obj = VMInterfaceHandler(
                     self._vnc_lib).get_vmi_obj(vmi['uuid'])
                 if vmi_obj.parent_type == 'project' and (
                    vmi_obj.parent_uuid != vn_obj.parent_uuid):
@@ -262,7 +269,7 @@ class VNetworkUpdateHandler(res_handler.ResourceUpdateHandler, VNetworkMixin):
         return ret_network_q
 
 
-class VNetworkGetHandler(res_handler.ResourceGetHandler, VNetworkMixin):
+class VNetworkGetHandler(ResourceGetHandler, VNetworkMixin):
     resource_list_method = 'virtual_networks_list'
     resource_get_method = 'virtual_network_read'
     detail = False
@@ -350,7 +357,7 @@ class VNetworkGetHandler(res_handler.ResourceGetHandler, VNetworkMixin):
             if filters and 'id' in filters:
                 _collect_without_prune(filters['id'])
             elif filters and 'name' in filters:
-                net_objs = self._network_list_project(context['tenant'])
+                net_objs = self._network_list_project(get_tenant_id(context))
                 all_net_objs.extend(net_objs)
                 all_net_objs.extend(self._network_list_shared())
                 all_net_objs.extend(self._network_list_router_external())
@@ -365,7 +372,7 @@ class VNetworkGetHandler(res_handler.ResourceGetHandler, VNetworkMixin):
                 all_net_objs.extend(self._network_list_shared_and_ext())
             else:
                 project_uuid = self._project_id_neutron_to_vnc(
-                    context['tenant'])
+                    get_tenant_id(context))
                 if not filters:
                     all_net_objs.extend(self._network_list_router_external())
                     all_net_objs.extend(self._network_list_shared())
@@ -500,7 +507,7 @@ class VNetworkGetHandler(res_handler.ResourceGetHandler, VNetworkMixin):
         return ret_list
 
 
-class VNetworkDeleteHandler(res_handler.ResourceDeleteHandler):
+class VNetworkDeleteHandler(ResourceDeleteHandler):
     resource_delete_method = 'virtual_network_delete'
 
     def resource_delete(self, context, net_id):

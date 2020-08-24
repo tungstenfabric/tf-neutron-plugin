@@ -12,9 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 # @author: Babu Shanmugam - eNovance (Red Hat)
-
 import json
 import uuid as UUID
+
+from six import itervalues
 
 from vnc_api import exceptions as vnc_exc
 import netaddr
@@ -160,7 +161,7 @@ class MockVnc(object):
 
     class CreateCallables(Callables):
         def _check_if_uuid_in_use(self, uuid_value):
-            for res_dict in self._resource_collection.itervalues():
+            for res_dict in itervalues(self._resource_collection):
                 if uuid_value in res_dict:
                     return True
             return False

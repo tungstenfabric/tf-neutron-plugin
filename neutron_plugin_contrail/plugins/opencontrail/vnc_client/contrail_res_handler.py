@@ -15,6 +15,8 @@
 import uuid
 
 from vnc_api import exceptions as vnc_exc
+
+from neutron_plugin_contrail.common.utils import get_tenant_id
 from neutron_plugin_contrail.plugins.opencontrail import contrail_plugin_base
 from vnc_api import vnc_api
 
@@ -58,7 +60,7 @@ class ContrailResourceHandler(object):
     @staticmethod
     def _validate_project_ids(context, project_ids=None):
         if context and not context['is_admin']:
-            return [context['tenant']]
+            return [get_tenant_id(context)]
 
         ids = []
         for project_id in project_ids:
@@ -76,6 +78,8 @@ class ContrailResourceHandler(object):
 
     @staticmethod
     def _project_id_neutron_to_vnc(proj_id):
+        if not proj_id:
+            return None
         return str(uuid.UUID(proj_id))
 
     @staticmethod
