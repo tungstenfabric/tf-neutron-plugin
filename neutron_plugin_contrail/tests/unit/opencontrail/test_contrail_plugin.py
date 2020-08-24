@@ -47,8 +47,7 @@ try:
 except ImportError:
     from neutron.tests.unit.extensions import test_l3 as test_l3_plugin
 
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import (
-    contrail_res_handler)
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import ContrailResourceHandler
 from neutron_plugin_contrail.tests.unit.opencontrail.vnc_mock import MockVnc
 from vnc_api import vnc_api
 from neutron_plugin_contrail.plugins.opencontrail import contrail_plugin_base as plugin_base
@@ -103,7 +102,7 @@ class JVContrailPluginTestCase(test_plugin.NeutronDbPluginV2TestCase):
         cfg.CONF.keystone_authtoken = KeyStoneInfo()
         from neutron_plugin_contrail import extensions
         cfg.CONF.api_extensions_path = "extensions:" + extensions.__path__[0]
-        res_handler = contrail_res_handler.ContrailResourceHandler
+        res_handler = ContrailResourceHandler
 
         # mimic the project id format change
         @staticmethod
