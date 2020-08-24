@@ -14,27 +14,31 @@
 
 import uuid
 
-from vnc_api import exceptions as vnc_exc
 try:
     from neutron_lib import constants
 except ImportError:
     from neutron.plugins.common import constants
 from vnc_api import vnc_api
-
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.sg_res_handler as sg_handler
+from vnc_api import exceptions as vnc_exc
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    ResourceCreateHandler,
+    ResourceDeleteHandler,
+    ResourceGetHandler,
+)
 
 
 class SecurityGroupRuleMixin(object):
     def _security_group_rule_vnc_to_neutron(self, sg_id, sg_rule,
                                             sg_obj=None, fields=None):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.sg_res_handler import SecurityGroupHandler
+
         sgr_q_dict = {}
         if sg_id is None:
             return sgr_q_dict
 
         if not sg_obj:
             try:
-                sg_obj = sg_handler.SecurityGroupHandler(
+                sg_obj = SecurityGroupHandler(
                     self._vnc_lib).get_sg_obj(id=sg_id)
             except vnc_exc.NoIdError:
                 self._raise_contrail_exception(
@@ -102,7 +106,8 @@ class SecurityGroupRuleMixin(object):
     # end _security_group_rule_vnc_to_neutron
 
     def _security_group_rule_find(self, sgr_id, project_uuid=None):
-        dom_projects = []
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.sg_res_handler import SecurityGroupHandler
+
         if not project_uuid:
             dom_projects = self._project_list_domain(None)
         else:
@@ -110,7 +115,7 @@ class SecurityGroupRuleMixin(object):
 
         for project in dom_projects:
             proj_id = project['uuid']
-            project_sgs = sg_handler.SecurityGroupHandler(
+            project_sgs = SecurityGroupHandler(
                 self._vnc_lib).resource_list_by_project(proj_id)
 
             for sg_obj in project_sgs:
@@ -126,8 +131,7 @@ class SecurityGroupRuleMixin(object):
     # end _security_group_rule_find
 
 
-class SecurityGroupRuleGetHandler(res_handler.ResourceGetHandler,
-                                  SecurityGroupRuleMixin):
+class SecurityGroupRuleGetHandler(ResourceGetHandler, SecurityGroupRuleMixin):
     def resource_get(self, context, sgr_id, fields=None):
         project_uuid = None
         if not context['is_admin']:
@@ -169,15 +173,16 @@ class SecurityGroupRuleGetHandler(res_handler.ResourceGetHandler,
     # end security_group_rules_read
 
     def resource_list(self, context, filters=None, fields=None):
-        ret_list = []
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.sg_res_handler import SecurityGroupHandler
 
+        ret_list = []
         # collect phase
         all_sgs = []
         if filters and 'tenant_id' in filters:
             project_ids = self._validate_project_ids(context,
                                                      filters['tenant_id'])
             for p_id in project_ids:
-                project_sgs = sg_handler.SecurityGroupHandler(
+                project_sgs = SecurityGroupHandler(
                     self._vnc_lib).resource_list_by_project(p_id)
 
                 all_sgs.append(project_sgs)
@@ -185,7 +190,7 @@ class SecurityGroupRuleGetHandler(res_handler.ResourceGetHandler,
             p_id = None
             if context and not context['is_admin']:
                 p_id = self._project_id_neutron_to_vnc(context['tenant'])
-            project_sgs = sg_handler.SecurityGroupHandler(
+            project_sgs = SecurityGroupHandler(
                 self._vnc_lib).resource_list_by_project(p_id)
 
             all_sgs.append(project_sgs)
@@ -203,14 +208,15 @@ class SecurityGroupRuleGetHandler(res_handler.ResourceGetHandler,
         return ret_list
 
 
-class SecurityGroupRuleDeleteHandler(res_handler.ResourceDeleteHandler,
+class SecurityGroupRuleDeleteHandler(ResourceDeleteHandler,
                                      SecurityGroupRuleMixin):
     def _security_group_rule_delete(self, sg_obj, sg_rule):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.sg_res_handler import SecurityGroupHandler
+
         rules = sg_obj.get_security_group_entries()
         rules.get_policy_rule().remove(sg_rule)
         sg_obj.set_security_group_entries(rules)
-        sg_handler.SecurityGroupHandler(
-            self._vnc_lib).resource_update_obj(sg_obj)
+        SecurityGroupHandler(self._vnc_lib).resource_update_obj(sg_obj)
         return
     # end _security_group_rule_delete
 
@@ -227,8 +233,7 @@ class SecurityGroupRuleDeleteHandler(res_handler.ResourceDeleteHandler,
                                        resource='security_group_rule')
 
 
-class SecurityGroupRuleCreateHandler(res_handler.ResourceCreateHandler,
-                                     SecurityGroupRuleMixin):
+class SecurityGroupRuleCreateHandler(ResourceCreateHandler, SecurityGroupRuleMixin):
     resource_create_method = "security_group_rule_create"
 
     def _convert_protocol(self, value):
@@ -293,6 +298,8 @@ class SecurityGroupRuleCreateHandler(res_handler.ResourceCreateHandler,
                     resource='security_group_rule')
 
     def _security_group_rule_neutron_to_vnc(self, sgr_q):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.sg_res_handler import SecurityGroupHandler
+
         # default port values
         if sgr_q['protocol'] in (constants.PROTO_NAME_ICMP,
                                  str(constants.PROTO_NUM_ICMP)):
@@ -321,7 +328,7 @@ class SecurityGroupRuleCreateHandler(res_handler.ResourceCreateHandler,
                 subnet=vnc_api.SubnetType(pfx, pfx_len))]
         elif sgr_q['remote_group_id']:
             try:
-                sg_obj = sg_handler.SecurityGroupHandler(
+                sg_obj = SecurityGroupHandler(
                     self._vnc_lib).get_sg_obj(id=sgr_q['remote_group_id'])
             except vnc_exc.NoIdError:
                 self._raise_contrail_exception('SecurityGroupNotFound',
@@ -365,7 +372,9 @@ class SecurityGroupRuleCreateHandler(res_handler.ResourceCreateHandler,
     # end _security_group_rule_neutron_to_vnc
 
     def _security_group_rule_create(self, sg_id, sg_rule, project_id):
-        sghandler = sg_handler.SecurityGroupHandler(self._vnc_lib)
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.sg_res_handler import SecurityGroupHandler
+
+        sghandler = SecurityGroupHandler(self._vnc_lib)
         try:
             sg_vnc = sghandler.get_sg_obj(id=sg_id)
         except vnc_exc.NoIdError:

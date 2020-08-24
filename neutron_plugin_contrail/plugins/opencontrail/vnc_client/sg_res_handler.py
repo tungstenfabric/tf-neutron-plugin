@@ -11,20 +11,27 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
+from __future__ import print_function
 import uuid
 
 from vnc_api import exceptions as vnc_exc
 from vnc_api import vnc_api
 
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.sgrule_res_handler as sgrule_handler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    ResourceCreateHandler,
+    ResourceDeleteHandler,
+    ResourceGetHandler,
+    ResourceUpdateHandler,
+    SGHandler,
+)
 
 
 class SecurityGroupMixin(object):
     def _security_group_vnc_to_neutron(self, sg_obj,
                                        contrail_extensions_enabled=False,
                                        fields=None):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.sgrule_res_handler import SecurityGroupRuleHandler
+
         sg_q_dict = {}
         extra_dict = {}
         extra_dict['fq_name'] = sg_obj.get_fq_name()
@@ -42,7 +49,7 @@ class SecurityGroupMixin(object):
 
         # get security group rules
         sg_q_dict['security_group_rules'] = []
-        rule_list = sgrule_handler.SecurityGroupRuleHandler(
+        rule_list = SecurityGroupRuleHandler(
             self._vnc_lib).security_group_rules_read(sg_obj)
 
         if rule_list:
@@ -128,7 +135,7 @@ class SecurityGroupMixin(object):
     # end _ensure_default_security_group_exists
 
 
-class SecurityGroupBaseGet(res_handler.ResourceGetHandler):
+class SecurityGroupBaseGet(ResourceGetHandler):
     resource_get_method = "security_group_read"
 
 
@@ -175,7 +182,8 @@ class SecurityGroupGetHandler(SecurityGroupBaseGet, SecurityGroupMixin):
         contrail_extensions_enabled = self._kwargs.get(
             'contrail_extensions_enabled', False)
         # collect phase
-        self._ensure_default_security_group_exists(context['tenant'])
+        project_id = context.get('tenant')
+        self._ensure_default_security_group_exists(project_id)
 
         all_sgs = []  # all sgs in all projects
         if context and not context['is_admin']:
@@ -196,7 +204,7 @@ class SecurityGroupGetHandler(SecurityGroupBaseGet, SecurityGroupMixin):
                                                              filters=filters))
 
         # prune phase
-        no_rule = res_handler.SGHandler(
+        no_rule = SGHandler(
             self._vnc_lib).get_no_rule_security_group(create=False)
         for project_sgs in all_sgs:
             for sg_obj in project_sgs:
@@ -217,15 +225,14 @@ class SecurityGroupGetHandler(SecurityGroupBaseGet, SecurityGroupMixin):
         return ret_list
 
 
-class SecurityGroupDeleteHandler(SecurityGroupBaseGet,
-                                 res_handler.ResourceDeleteHandler):
+class SecurityGroupDeleteHandler(SecurityGroupBaseGet, ResourceDeleteHandler):
     resource_delete_method = "security_group_delete"
 
     def resource_delete(self, context, sg_id):
         try:
             sg_obj = self._resource_get(id=sg_id)
             if sg_obj.name == 'default' and (
-               self._project_id_neutron_to_vnc(context['tenant']) ==
+               self._project_id_neutron_to_vnc(context.get('tenant')) ==
                sg_obj.parent_uuid):
                 # Deny delete if the security group name is default and
                 # the owner of the SG is deleting it.
@@ -241,7 +248,7 @@ class SecurityGroupDeleteHandler(SecurityGroupBaseGet,
                 'SecurityGroupInUse', id=sg_id, resource='security_group')
 
 
-class SecurityGroupUpdateHandler(res_handler.ResourceUpdateHandler,
+class SecurityGroupUpdateHandler(ResourceUpdateHandler,
                                  SecurityGroupBaseGet,
                                  SecurityGroupMixin):
     resource_update_method = "security_group_update"
@@ -269,8 +276,7 @@ class SecurityGroupUpdateHandler(res_handler.ResourceUpdateHandler,
         return ret_sg_q
 
 
-class SecurityGroupCreateHandler(res_handler.ResourceCreateHandler,
-                                 SecurityGroupMixin):
+class SecurityGroupCreateHandler(ResourceCreateHandler, SecurityGroupMixin):
     resource_create_method = "security_group_create"
 
     def _create_security_group(self, sg_q):
@@ -289,6 +295,8 @@ class SecurityGroupCreateHandler(res_handler.ResourceCreateHandler,
         return sg_vnc
 
     def resource_create(self, context, sg_q):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.sgrule_res_handler import SecurityGroupRuleHandler
+
         contrail_extensions_enabled = self._kwargs.get(
             'contrail_extensions_enabled', False)
         sg_obj = self._security_group_neutron_to_vnc(
@@ -304,29 +312,31 @@ class SecurityGroupCreateHandler(res_handler.ResourceCreateHandler,
         sg_uuid = self._resource_create(sg_obj)
 
         # allow all egress traffic
-        def_rule = {}
-        def_rule['port_range_min'] = 0
-        def_rule['port_range_max'] = 65535
-        def_rule['direction'] = 'egress'
-        def_rule['remote_ip_prefix'] = '0.0.0.0/0'
-        def_rule['remote_group_id'] = None
-        def_rule['protocol'] = 'any'
-        def_rule['ethertype'] = 'IPv4'
-        def_rule['security_group_id'] = sg_uuid
-        sgrule_handler.SecurityGroupRuleHandler(
-            self._vnc_lib).resource_create(context, def_rule)
+        def_rule_v4 = {
+            'port_range_min': 0,
+            'port_range_max': 65535,
+            'direction': 'egress',
+            'remote_ip_prefix': '0.0.0.0/0',
+            'remote_group_id': None,
+            'protocol': 'any',
+            'ethertype': 'IPv4',
+            'security_group_id': sg_uuid,
+        }
+        SecurityGroupRuleHandler(self._vnc_lib).resource_create(context,
+                                                                def_rule_v4)
 
-        def_rule = {}
-        def_rule['port_range_min'] = 0
-        def_rule['port_range_max'] = 65535
-        def_rule['direction'] = 'egress'
-        def_rule['remote_ip_prefix'] = None
-        def_rule['remote_group_id'] = None
-        def_rule['protocol'] = 'any'
-        def_rule['ethertype'] = 'IPv6'
-        def_rule['security_group_id'] = sg_uuid
-        sgrule_handler.SecurityGroupRuleHandler(
-            self._vnc_lib).resource_create(context, def_rule)
+        def_rule_v6 = {
+            'port_range_min': 0,
+            'port_range_max': 65535,
+            'direction': 'egress',
+            'remote_ip_prefix': None,
+            'remote_group_id': None,
+            'protocol': 'any',
+            'ethertype': 'IPv6',
+            'security_group_id': sg_uuid,
+        }
+        SecurityGroupRuleHandler(self._vnc_lib).resource_create(context,
+                                                                def_rule_v6)
 
         ret_sg_q = self._security_group_vnc_to_neutron(
             sg_obj, contrail_extensions_enabled)

@@ -76,6 +76,8 @@ class ContrailResourceHandler(object):
 
     @staticmethod
     def _project_id_neutron_to_vnc(proj_id):
+        if not proj_id:
+            return None
         return str(uuid.UUID(proj_id))
 
     @staticmethod

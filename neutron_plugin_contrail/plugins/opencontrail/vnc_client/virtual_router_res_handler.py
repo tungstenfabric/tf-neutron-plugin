@@ -12,15 +12,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from vnc_api import exceptions as vnc_exc
-
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
-
 try:
     from neutron.openstack.common import log as logging
 except ImportError:
     from oslo_log import log as logging
+from vnc_api import exceptions as vnc_exc
+
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    ResourceGetHandler,
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -38,8 +38,7 @@ class VirtualRouterMixin(object):
         return vr
 
 
-class VirtualRouterGetHandler(res_handler.ResourceGetHandler,
-                              VirtualRouterMixin):
+class VirtualRouterGetHandler(ResourceGetHandler, VirtualRouterMixin):
     resource_get_method = "virtual_router_read"
     resource_list_method = "virtual_routers_list"
 

@@ -15,7 +15,12 @@
 from vnc_api import exceptions as vnc_exc
 from vnc_api import vnc_api
 
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    ResourceCreateHandler,
+    ResourceDeleteHandler,
+    ResourceGetHandler,
+    ResourceUpdateHandler,
+)
 
 
 class IPamMixin(object):
@@ -47,7 +52,7 @@ class IPamMixin(object):
     # end _ipam_neutron_to_vnc
 
 
-class IPamBaseGet(res_handler.ResourceGetHandler):
+class IPamBaseGet(ResourceGetHandler):
     resource_get_method = "network_ipam_read"
 
 
@@ -110,8 +115,7 @@ class IPamGetHandler(IPamBaseGet, IPamMixin):
         return len(ipam_info)
 
 
-class IPamUpdateHandler(res_handler.ResourceUpdateHandler,
-                        IPamBaseGet, IPamMixin):
+class IPamUpdateHandler(ResourceUpdateHandler, IPamBaseGet, IPamMixin):
     resource_update_method = "network_ipam_update"
 
     def resource_update(self, context, ipam_id, ipam_q):
@@ -126,14 +130,14 @@ class IPamUpdateHandler(res_handler.ResourceUpdateHandler,
         return self._ipam_vnc_to_neutron(ipam_obj)
 
 
-class IPamDeleteHandler(res_handler.ResourceDeleteHandler):
+class IPamDeleteHandler(ResourceDeleteHandler):
     resource_delete_method = "network_ipam_delete"
 
     def resource_delete(self, context, ipam_id):
         return self._resource_delete(id=ipam_id)
 
 
-class IPamCreateHandler(res_handler.ResourceCreateHandler):
+class IPamCreateHandler(ResourceCreateHandler):
     resource_create_method = "network_ipam_create"
 
     def resource_create(self, context, ipam_q):
