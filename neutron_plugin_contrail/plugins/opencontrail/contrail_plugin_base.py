@@ -13,7 +13,7 @@
 #    under the License.
 #
 # @author: Hampapur Ajay, Praneet Bachheti, Rudra Rugge, Atul Moghe
-
+from __future__ import print_function
 
 try:
     from neutron.api.v2.attributes import ATTR_NOT_SPECIFIED

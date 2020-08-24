@@ -11,23 +11,28 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-from vnc_api import exceptions as vnc_exc
-from vnc_api import vnc_api
-
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.vn_res_handler as vn_handler
+from __future__ import print_function
 
 try:
     from neutron.openstack.common import log as logging
 except ImportError:
     from oslo_log import log as logging
+from vnc_api import exceptions as vnc_exc
+from vnc_api import vnc_api
+
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    ResourceCreateHandler,
+    ResourceDeleteHandler,
+    ResourceGetHandler,
+)
 
 LOG = logging.getLogger(__name__)
 
 
 class SvcInstanceMixin(object):
     def _svc_instance_vnc_to_neutron(self, si_obj):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.vn_res_handler import VNetworkHandler
+
         si_q_dict = self._vnc_lib.obj_to_dict(si_obj)
 
         # replace field names
@@ -38,7 +43,7 @@ class SvcInstanceMixin(object):
         si_props = si_obj.get_service_instance_properties()
         if si_props:
             vn_fq_name = si_props.get_right_virtual_network()
-            vn_obj = vn_handler.VNetworkHandler(self._vnc_lib).get_vn_obj(
+            vn_obj = VNetworkHandler(self._vnc_lib).get_vn_obj(
                 fq_name_str=vn_fq_name)
             si_q_dict['external_net'] = str(vn_obj.uuid) + ' ' + vn_obj.name
             si_q_dict['internal_net'] = ''
@@ -47,8 +52,7 @@ class SvcInstanceMixin(object):
     # end _svc_instance_vnc_to_neutron
 
 
-class SvcInstanceGetHandler(res_handler.ResourceGetHandler,
-                            SvcInstanceMixin):
+class SvcInstanceGetHandler(ResourceGetHandler, SvcInstanceMixin):
     resource_get_method = "service_instance_read"
     resource_list_method = "service_instances_list"
     detail = False
@@ -111,18 +115,19 @@ class SvcInstanceGetHandler(res_handler.ResourceGetHandler,
         return ret_list
 
 
-class SvcInstanceDeleteHandler(res_handler.ResourceDeleteHandler):
+class SvcInstanceDeleteHandler(ResourceDeleteHandler):
     resource_delete_method = "service_instance_delete"
 
     def resource_delete(self, context, si_id):
         self._resource_delete(id=si_id)
 
 
-class SvcInstanceCreateHandler(res_handler.ResourceCreateHandler,
-                               SvcInstanceMixin):
+class SvcInstanceCreateHandler(ResourceCreateHandler, SvcInstanceMixin):
     resource_create_method = "service_instance_create"
 
     def _svc_instance_neutron_to_vnc(self, si_q):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.vn_res_handler import VNetworkHandler
+
         project_id = self._project_id_neutron_to_vnc(si_q['tenant_id'])
         try:
             project_obj = self._project_read(proj_id=project_id)
@@ -131,8 +136,7 @@ class SvcInstanceCreateHandler(res_handler.ResourceCreateHandler,
                 'ProjectNotFound', project_id=project_id,
                 resource='svc_instance')
         net_id = si_q['external_net']
-        ext_vn = vn_handler.VNetworkHandler(
-            self._vnc_lib).get_vn_obj(id=net_id)
+        ext_vn = VNetworkHandler(self._vnc_lib).get_vn_obj(id=net_id)
         scale_out = vnc_api.ServiceScaleOutType(
             max_instances=1, auto_scale=False)
         si_prop = vnc_api.ServiceInstanceType(

@@ -1,3 +1,4 @@
+from __future__ import print_function
 try:
     from neutron.common.exceptions import SubnetNotFound
 except ImportError:

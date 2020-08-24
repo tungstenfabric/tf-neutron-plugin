@@ -12,12 +12,14 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from __future__ import absolute_import, unicode_literals
 
 import datetime
 import uuid
 import mock
 import unittest
+
+from neutron_plugin_contrail.common import utils
 
 try:
     from oslo_config import cfg
@@ -47,15 +49,13 @@ try:
 except ImportError:
     from neutron.tests.unit.extensions import test_l3 as test_l3_plugin
 
-from neutron_plugin_contrail.plugins.opencontrail.vnc_client import (
-    contrail_res_handler)
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import ContrailResourceHandler
 from neutron_plugin_contrail.tests.unit.opencontrail.vnc_mock import MockVnc
 from vnc_api import vnc_api
 from neutron_plugin_contrail.plugins.opencontrail import contrail_plugin_base as plugin_base
 from neutron_plugin_contrail.plugins.opencontrail.contrail_plugin import NeutronPluginContrailCoreV2
 
-CONTRAIL_PKG_PATH = (
-    "neutron_plugin_contrail.plugins.opencontrail.contrail_plugin_v3")
+CONTRAIL_PKG_PATH = "neutron_plugin_contrail.plugins.opencontrail.contrail_plugin_v3"
 
 
 class Context(object):
@@ -96,14 +96,13 @@ class KeyStoneInfo(object):
 
 
 class JVContrailPluginTestCase(test_plugin.NeutronDbPluginV2TestCase):
-    _plugin_name = ('%s.NeutronPluginContrailCoreV3' % CONTRAIL_PKG_PATH)
+    _plugin_name = '%s.NeutronPluginContrailCoreV3' % CONTRAIL_PKG_PATH
 
     def setUp(self, plugin=None, ext_mgr=None):
-
         cfg.CONF.keystone_authtoken = KeyStoneInfo()
         from neutron_plugin_contrail import extensions
         cfg.CONF.api_extensions_path = "extensions:" + extensions.__path__[0]
-        res_handler = contrail_res_handler.ContrailResourceHandler
+        res_handler = ContrailResourceHandler
 
         # mimic the project id format change
         @staticmethod
@@ -121,7 +120,7 @@ class JVContrailPluginTestCase(test_plugin.NeutronDbPluginV2TestCase):
         res_handler._project_id_vnc_to_neutron = mock_proj_id_vnc_to_neutron
         res_handler._project_id_neutron_to_vnc = mock_proj_id_neutron_to_vnc
 
-        vnc_api.VncApi = MockVnc
+        utils.get_vnc_api_instance = lambda *args, **kwargs: MockVnc()
         self.domain_obj = vnc_api.Domain()
         MockVnc().domain_create(self.domain_obj)
 

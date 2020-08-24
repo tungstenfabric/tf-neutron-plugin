@@ -15,6 +15,7 @@
 #    under the License.
 #
 # @author: Hampapur Ajay, Praneet Bachheti
+from __future__ import print_function
 
 import copy
 import logging

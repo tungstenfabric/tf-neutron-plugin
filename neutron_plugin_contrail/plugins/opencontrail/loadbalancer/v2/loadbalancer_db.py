@@ -1,6 +1,7 @@
 #
 # Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
 #
+from __future__ import print_function
 
 from vnc_api import exceptions as vnc_exc
 try:

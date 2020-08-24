@@ -1,6 +1,7 @@
 #
 # Copyright (c) 2014 Juniper Networks, Inc. All rights reserved.
 #
+from __future__ import print_function
 try:
     from neutron.api.v2.attributes import ATTR_NOT_SPECIFIED
 except Exception:
