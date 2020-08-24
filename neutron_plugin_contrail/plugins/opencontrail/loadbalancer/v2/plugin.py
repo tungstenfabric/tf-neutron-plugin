@@ -9,7 +9,8 @@ class LoadBalancerPluginV2(LoadBalancerPluginDbV2):
     supported_extension_aliases = [
         "lbaasv2",
         "extra_lbaas_opts",
-        "lb_network_vip"]
+        "lb_network_vip",
+    ]
 
     if hasattr(loadbalancerv2, 'LOADBALANCERV2_PREFIX'):
         path_prefix = loadbalancerv2.LOADBALANCERV2_PREFIX

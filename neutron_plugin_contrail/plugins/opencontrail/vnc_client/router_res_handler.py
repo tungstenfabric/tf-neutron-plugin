@@ -11,17 +11,21 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-from vnc_api import exceptions as vnc_exc
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler as res_handler
 import netaddr
+
 try:
     from neutron_lib import constants
 except ImportError:
     from neutron.plugins.common import constants
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.subnet_res_handler as subnet_handler
-import neutron_plugin_contrail.plugins.opencontrail.vnc_client.vmi_res_handler as vmi_handler
 from vnc_api import vnc_api
+from vnc_api import exceptions as vnc_exc
+
+from neutron_plugin_contrail.plugins.opencontrail.vnc_client.contrail_res_handler import (
+    ResourceCreateHandler,
+    ResourceDeleteHandler,
+    ResourceGetHandler,
+    ResourceUpdateHandler,
+)
 
 
 class LogicalRouterMixin(object):
@@ -109,8 +113,7 @@ class LogicalRouterMixin(object):
         self._vnc_lib.logical_router_update(router_obj)
 
 
-class LogicalRouterCreateHandler(res_handler.ResourceCreateHandler,
-                                 LogicalRouterMixin):
+class LogicalRouterCreateHandler(ResourceCreateHandler, LogicalRouterMixin):
     resource_create_method = 'logical_router_create'
 
     def _create_router(self, router_q):
@@ -134,8 +137,7 @@ class LogicalRouterCreateHandler(res_handler.ResourceCreateHandler,
             rtr_obj, contrail_extensions_enabled=contrail_extensions_enabled)
 
 
-class LogicalRouterDeleteHandler(res_handler.ResourceDeleteHandler,
-                                 LogicalRouterMixin):
+class LogicalRouterDeleteHandler(ResourceDeleteHandler, LogicalRouterMixin):
     resource_delete_method = 'logical_router_delete'
 
     def resource_delete(self, context, rtr_id):
@@ -155,8 +157,7 @@ class LogicalRouterDeleteHandler(res_handler.ResourceDeleteHandler,
             self._raise_contrail_exception('RouterInUse', router_id=rtr_id)
 
 
-class LogicalRouterUpdateHandler(res_handler.ResourceUpdateHandler,
-                                 LogicalRouterMixin):
+class LogicalRouterUpdateHandler(ResourceUpdateHandler, LogicalRouterMixin):
     resource_update_method = 'logical_router_update'
 
     def _get_rtr_obj(self, router_q):
@@ -171,8 +172,7 @@ class LogicalRouterUpdateHandler(res_handler.ResourceUpdateHandler,
         return self._rtr_obj_to_neutron_dict(rtr_obj)
 
 
-class LogicalRouterGetHandler(res_handler.ResourceGetHandler,
-                              LogicalRouterMixin):
+class LogicalRouterGetHandler(ResourceGetHandler, LogicalRouterMixin):
     resource_get_method = 'logical_router_read'
     resource_list_method = 'logical_routers_list'
 
@@ -205,8 +205,8 @@ class LogicalRouterGetHandler(res_handler.ResourceGetHandler,
         return []
 
     def get_vmi_obj_router_id(self, vmi_obj, project_id=None):
-        vmi_get_handler = vmi_handler.VMInterfaceGetHandler(
-            self._vnc_lib)
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.vmi_res_handler import VMInterfaceGetHandler
+        vmi_get_handler = VMInterfaceGetHandler(self._vnc_lib)
 
         port_net_id = vmi_obj.get_virtual_network_refs()[0]['uuid']
         # find router_id from port
@@ -302,8 +302,8 @@ class LogicalRouterGetHandler(res_handler.ResourceGetHandler,
         return len(rtrs_info)
 
 
-class LogicalRouterInterfaceHandler(res_handler.ResourceGetHandler,
-                                    res_handler.ResourceUpdateHandler,
+class LogicalRouterInterfaceHandler(ResourceGetHandler,
+                                    ResourceUpdateHandler,
                                     LogicalRouterMixin):
     resource_get_method = 'logical_router_read'
     resource_list_method = 'logical_routers_list'
@@ -311,17 +311,21 @@ class LogicalRouterInterfaceHandler(res_handler.ResourceGetHandler,
 
     def __init__(self, vnc_lib):
         super(LogicalRouterInterfaceHandler, self).__init__(vnc_lib)
-        self._vmi_handler = vmi_handler.VMInterfaceHandler(
-            self._vnc_lib)
-        self._subnet_handler = subnet_handler.SubnetHandler(self._vnc_lib)
+
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.subnet_res_handler import SubnetHandler
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.vmi_res_handler import VMInterfaceHandler
+
+        self._subnet_handler = SubnetHandler(self._vnc_lib)
+        self._vmi_handler = VMInterfaceHandler(self._vnc_lib)
 
     def _get_subnet_cidr(self, subnet_id, subnet_dict):
         for subnet in subnet_dict:
             if subnet['id'] == subnet_id:
                 return subnet['cidr']
 
-    def _check_for_dup_router_subnet(self, router_obj, subnet_id,
-                                     subnet_cidr):
+    def _check_for_dup_router_subnet(self, router_obj, subnet_id, subnet_cidr):
+        from neutron_plugin_contrail.plugins.opencontrail.vnc_client.subnet_res_handler import SubnetHandler
+
         try:
             router_vmi_objs = []
             if router_obj.get_virtual_machine_interface_refs():
@@ -342,9 +346,7 @@ class LogicalRouterInterfaceHandler(res_handler.ResourceGetHandler,
 
                 fixed_ips = self._vmi_handler.get_vmi_ip_dict(vmi_obj, vn_obj,
                                                               port_req_memo)
-                vn_subnets = (
-                    subnet_handler.SubnetHandler.get_vn_subnets(
-                        vn_obj))
+                vn_subnets = (SubnetHandler.get_vn_subnets(vn_obj))
                 for ip in fixed_ips:
                     if ip['subnet_id'] == subnet_id:
                         msg = ("Router %s already has a port on subnet %s"
