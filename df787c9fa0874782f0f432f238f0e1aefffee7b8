@@ -34,6 +34,24 @@
       "revId": "df787c9fa0874782f0f432f238f0e1aefffee7b8",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "442b4009_773c323d",
+        "filename": "neutron_plugin_contrail/common/utils.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 578
+      },
+      "writtenOn": "2020-08-25T06:44:06Z",
+      "side": 1,
+      "message": "I agree with Andrey.",
+      "parentUuid": "7a508f26_176b8f64",
+      "revId": "df787c9fa0874782f0f432f238f0e1aefffee7b8",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
     }
   ]
 }
