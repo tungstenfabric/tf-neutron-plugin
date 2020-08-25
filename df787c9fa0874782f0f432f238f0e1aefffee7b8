@@ -52,6 +52,24 @@
       "revId": "df787c9fa0874782f0f432f238f0e1aefffee7b8",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9438983_3ab3ea9c",
+        "filename": "neutron_plugin_contrail/common/utils.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 56
+      },
+      "writtenOn": "2020-08-25T10:16:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "442b4009_773c323d",
+      "revId": "df787c9fa0874782f0f432f238f0e1aefffee7b8",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": false
     }
   ]
 }
