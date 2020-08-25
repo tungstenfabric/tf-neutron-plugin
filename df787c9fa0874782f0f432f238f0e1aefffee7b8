@@ -16,6 +16,24 @@
       "revId": "df787c9fa0874782f0f432f238f0e1aefffee7b8",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a508f26_176b8f64",
+        "filename": "neutron_plugin_contrail/common/utils.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 382
+      },
+      "writtenOn": "2020-08-25T06:16:26Z",
+      "side": 1,
+      "message": "if response is not defined - it means that all API servers are inaccessible. and requests to all of them raised an exception. that exception was logged.\nif response is defined then we do not reach this point - code do \u0027return\u0027 before.\n\nSo what\u0027s the reason to define fake object just to raise more complex exception?",
+      "parentUuid": "5810089e_54d06a87",
+      "revId": "df787c9fa0874782f0f432f238f0e1aefffee7b8",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
     }
   ]
 }
