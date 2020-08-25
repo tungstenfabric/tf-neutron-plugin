@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5810089e_54d06a87",
+        "filename": "neutron_plugin_contrail/common/utils.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 56
+      },
+      "writtenOn": "2020-08-25T01:30:27Z",
+      "side": 1,
+      "message": "why don\u0027t we raise base Exception only if response is not defined.\n\nif response:\n    response.raise_for_status()\nelse: \n    raise Exception(\u0027Unable to verify that vnc_api is authenticated. \u0027\n                    \u0027All API server instances are unavailable. \u0027\n                    \u0027API server addresses: {}\u0027.format(str(api_server_ips)))\u0027\n\nThis way we wont mask the actual exception if there is one.\n\n\nanother option is to define default response like this at line 122\nresponse \u003d requests.Response()\nresponse.status_code\u003d 500\nresponse.reason \u003d \"Unable to verify that vnc_api is authenticated\"\n\nthen raise it (leave the code as-is)\n\n\u003e\u003e\u003e response.raise_for_status()\nTraceback (most recent call last):\n  File \"\u003cstdin\u003e\", line 1, in \u003cmodule\u003e\n  File \"/usr/lib/python2.7/site-packages/requests/models.py\", line 940, in raise_for_status\n    raise HTTPError(http_error_msg, response\u003dself)\nrequests.exceptions.HTTPError: 500 Server Error: Unable to verify that vnc_api is authenticated for url: None\n\u003e\u003e\u003e",
+      "revId": "df787c9fa0874782f0f432f238f0e1aefffee7b8",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
