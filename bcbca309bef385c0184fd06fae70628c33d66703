@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61b55fcb_4be46217",
+        "filename": "neutron_plugin_contrail/plugins/opencontrail/vnc_client/contrail_res_handler.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 56
+      },
+      "writtenOn": "2020-09-23T16:35:43Z",
+      "side": 0,
+      "message": "This code returns tenant from context[\u0027tenant\u0027]",
+      "revId": "bcbca309bef385c0184fd06fae70628c33d66703",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    }
+  ]
+}
