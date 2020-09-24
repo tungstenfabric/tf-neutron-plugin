@@ -16,6 +16,24 @@
       "revId": "bcbca309bef385c0184fd06fae70628c33d66703",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c440cda_70381696",
+        "filename": "neutron_plugin_contrail/plugins/opencontrail/vnc_client/contrail_res_handler.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 578
+      },
+      "writtenOn": "2020-09-24T12:27:26Z",
+      "side": 0,
+      "message": "\u0027tenant\u0027 is no longer used by neutron based on my observation.",
+      "parentUuid": "61b55fcb_4be46217",
+      "revId": "bcbca309bef385c0184fd06fae70628c33d66703",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
     }
   ]
 }

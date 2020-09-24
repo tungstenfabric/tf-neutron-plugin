@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5b121510_e685629d",
+        "filename": "neutron_plugin_contrail/plugins/opencontrail/vnc_client/contrail_res_handler.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 578
+      },
+      "writtenOn": "2020-09-24T12:27:26Z",
+      "side": 1,
+      "message": "Yes, you are correct.\nI found out that neutron no longer uses \u0027tenant\u0027 key, but \u0027_project_id\u0027 instead. Unfortunately Contrail is still looking for \u0027tenant\u0027 in multiple places so I wanted to maintain compatibility.",
+      "parentUuid": "1821d4d7_a9fef59f",
+      "revId": "a5ccccdada94a744834451cdad6a2966d0bc71cd",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a1776f74_1205049d",
         "filename": "neutron_plugin_contrail/plugins/opencontrail/vnc_client/ipam_res_handler.py",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2020-09-23T16:35:43Z",
       "side": 1,
       "message": "Where is this used?",
+      "revId": "a5ccccdada94a744834451cdad6a2966d0bc71cd",
+      "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c481a35_a850bc3d",
+        "filename": "neutron_plugin_contrail/plugins/opencontrail/vnc_client/ipam_res_handler.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 578
+      },
+      "writtenOn": "2020-09-24T12:27:26Z",
+      "side": 1,
+      "message": "Neutron is looking for \u0027project_id\u0027 key instead of \u0027tenant_id\u0027. It seems that Neutron dropped \u0027tenant*\u0027 key, but I\u0027m not sure if that is true for all use cases.",
+      "parentUuid": "a1776f74_1205049d",
       "revId": "a5ccccdada94a744834451cdad6a2966d0bc71cd",
       "serverId": "c72cd27d-1743-4a55-84a4-cd13b8400c52",
       "unresolved": true
