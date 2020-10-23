@@ -2,5 +2,5 @@ mock
 testtools
 fixtures
 webtest
-neutron
+neutron<17.0.0
 oslotest
