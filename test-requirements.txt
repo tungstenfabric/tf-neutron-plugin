@@ -3,5 +3,6 @@ testtools
 fixtures
 webtest
 neutron<17.0.0,!=16.3.0
+SQLAlchemy<1.4.0
 oslotest
-oslo.policy!=3.6.2
+oslo.policy<3.6.2
