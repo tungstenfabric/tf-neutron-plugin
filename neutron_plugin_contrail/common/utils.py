@@ -121,13 +121,18 @@ def vnc_api_is_authenticated(api_server_ips):
         )
 
         try:
+            verify = False
+            if not cfg.CONF.APISERVER.get('insecure', False):
+                ca = cfg.CONF.APISERVER.get('cafile', False)
+                verify = ca if ca is not None else False
             response = requests.get(
                 url,
                 timeout=(cfg.CONF.APISERVER.connection_timeout,
                          cfg.CONF.APISERVER.timeout),
-                verify=cfg.CONF.APISERVER.get('cafile', False))
+                verify=verify)
         except requests.exceptions.RequestException as e:
-            LOG.warning("Failed connecting to API server: %s" % e)
+            LOG.warning("Failed connecting to API server: url=%s verify=%s err=%s"
+                        % (url, verify, e))
             continue
 
         if response.status_code == requests.codes.ok:
