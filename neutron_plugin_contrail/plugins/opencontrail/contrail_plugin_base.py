@@ -64,6 +64,8 @@ from neutron.db import portbindings_base
 from neutron.extensions import allowedaddresspairs
 from neutron.extensions import external_net
 from neutron.extensions import l3
+from neutron.extensions import netmtu
+from neutron.extensions import netmtu_writable
 from neutron.extensions import portbindings
 from neutron.extensions import securitygroup
 from neutron_plugin_contrail.extensions import serviceinterface
@@ -161,7 +163,9 @@ class NeutronPluginContrailCoreBase(neutron_plugin_base_v2.NeutronPluginBaseV2,
                                     portbindings_base.PortBindingBaseMixin,
                                     external_net.External_net,
                                     serviceinterface.Serviceinterface,
-                                    vfbinding.Vfbinding):
+                                    vfbinding.Vfbinding,
+                                    netmtu.Netmtu,
+                                    netmtu_writable.Netmtu_writable):
 
     supported_extension_aliases = [
         "standard-attr-description",
@@ -174,6 +178,8 @@ class NeutronPluginContrailCoreBase(neutron_plugin_base_v2.NeutronPluginBaseV2,
         "allowed-address-pairs",
         "extra_dhcp_opt",
         "provider",
+        "net-mtu-writable",
+        "net-mtu"
     ]
 
     __native_bulk_support = False
