@@ -272,6 +272,10 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
         if (filters is not None and 'project_id' in filters and
                 'tenant_id' not in filters):
             filters['tenant_id'] = filters['project_id']
+        if (filters is not None and 'project_id' in filters and
+                'tenant_id' in filters):
+            if (filters['project_id'] == filters['tenant_id']):
+                filters.pop('tenant_id')
         resource_dict = {}
         if resource_id:
             resource_dict['id'] = resource_id
