@@ -19,7 +19,8 @@ setup_sources_rules = [
 cd_cmd = 'cd ' + Dir('.').path + ' && '
 sdist_depends = []
 sdist_depends.extend(setup_sources_rules)
-sdist_gen = env.Command('dist/neutron-plugin-0.1dev.tar.gz',
+
+sdist_gen = env.Command('dist/neutron-plugin-%s.tar.gz' % env.GetPyVersion(),
                         'setup.py', cd_cmd + 'python setup.py sdist')
 env.Depends(sdist_gen, sdist_depends)
 
