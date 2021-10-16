@@ -3,6 +3,7 @@ testtools
 fixtures
 webtest
 neutron<17.0.0,!=16.3.0
+neutron-lib<2.16.0
 
 # pinned deps - version to set max for py36, less-or-equal to compatibility with py27
 SQLAlchemy<1.4.0
