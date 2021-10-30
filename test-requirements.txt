@@ -11,3 +11,4 @@ oslotest
 oslo.db<11.0.0
 oslo.policy<3.6.2
 pyroute2<0.6
+ovs<2.14
