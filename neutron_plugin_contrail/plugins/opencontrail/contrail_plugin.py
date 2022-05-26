@@ -272,6 +272,11 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
         if (filters is not None and 'project_id' in filters and
                 'tenant_id' not in filters):
             filters['tenant_id'] = filters['project_id']
+        # Need filter only by tenant_id to avoid duplicates in replies
+        # from vnc API
+        if (filters is not None and 'project_id' in filters and
+                'tenant_id' in filters):
+            del filters['project_id']
         resource_dict = {}
         if resource_id:
             resource_dict['id'] = resource_id
@@ -282,6 +287,8 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
         return resource_dict
 
     def _prune(self, resource_dict, fields):
+        if 'tenant_id' in resource_dict and 'project_id' not in resource_dict:
+            resource_dict['project_id'] = resource_dict['tenant_id']
         if fields:
             return dict(((key, item) for key, item in resource_dict.items()
                          if key in fields))
