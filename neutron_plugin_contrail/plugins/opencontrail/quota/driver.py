@@ -185,7 +185,10 @@ class QuotaDriver(object):
         :param resources: A dictionary of the registered resource keys.
         :param tenant_id: The ID of the tenant to return quotas for.
         """
-        project_id = str(uuid.UUID(tenant_id))
+        try:
+            project_id = str(uuid.UUID(tenant_id))
+        except ValueError:
+            return {}
         try:
             project = cls._get_vnc_conn().project_read(id=project_id)
         except vnc_exc.NoIdError:
