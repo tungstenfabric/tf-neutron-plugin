@@ -321,6 +321,13 @@ class NeutronPluginContrailCoreV2(plugin_base.NeutronPluginContrailCoreBase):
             del res_data[res_type][key]
 
         res_dict = self._encode_resource(resource=res_data[res_type])
+        try:
+            res_dict.get('resource').get("name", '').encode('ascii')
+        except UnicodeEncodeError:
+            LOG.error("Non-ascii symbols are not allowed")
+            msg = _("Non-ascii symbols are not allowed")
+            raise BadRequest(resource=res_type, msg=msg)
+
         status_code, res_info = self._request_backend(context, res_dict,
                                                       res_type, 'CREATE')
         res_dicts = self._transform_response(status_code, info=res_info,
