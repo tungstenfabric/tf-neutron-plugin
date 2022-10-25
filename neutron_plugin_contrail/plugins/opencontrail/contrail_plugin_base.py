@@ -266,6 +266,8 @@ class NeutronPluginContrailCoreBase(neutron_plugin_base_v2.NeutronPluginBaseV2,
 
     def create_network(self, context, network):
         """Creates a new Virtual Network."""
+
+        self._pre_create_network(context, network)
         return self._create_resource('network', context, network)
 
     def get_network(self, context, network_id, fields=None):
@@ -276,6 +278,7 @@ class NeutronPluginContrailCoreBase(neutron_plugin_base_v2.NeutronPluginBaseV2,
     def update_network(self, context, network_id, network):
         """Updates the attributes of a particular Virtual Network."""
 
+        self._pre_update_network(context, network)
         return self._update_resource('network', context, network_id,
                                      network)
 
@@ -388,6 +391,25 @@ class NeutronPluginContrailCoreBase(neutron_plugin_base_v2.NeutronPluginBaseV2,
 
     def _get_port(self, context, id, fields=None):
         return self._get_resource('port', context, id, fields)
+
+    def _pre_create_network(self, context, network):
+        # (gzimin): Here we can add all checks for networks
+        # before sending requests to the TungstenFabric side
+
+        self._get_network_mtu(network)
+
+    def _pre_update_network(self, context, network):
+        # (gzimin): Here we can add all checks for networks
+        # before sending requests to the TungstenFabric side
+
+        self._get_network_mtu(network)
+
+    def _get_network_mtu(self, network):
+        net_mtu = network.get('network').get('mtu')
+        max_mtu = cfg.CONF.global_physnet_mtu
+        if net_mtu and max_mtu and max_mtu < net_mtu:
+            msg = "Requested MTU is too big, maximum is %d" % max_mtu
+            raise neutron_exc.InvalidInput(error_message=msg)
 
     def _update_ips_for_port(self, context, network_id, port_id, original_ips,
                              new_ips):
