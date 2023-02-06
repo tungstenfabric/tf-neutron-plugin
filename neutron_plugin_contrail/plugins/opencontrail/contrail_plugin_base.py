@@ -65,7 +65,10 @@ except ImportError:
 
 from neutron import version
 from neutron.db import portbindings_base
-from neutron.extensions import allowedaddresspairs
+try:
+    from neutron_lib.exceptions import allowedaddresspairs
+except ImportError:
+    from neutron.extensions import allowedaddresspairs
 from neutron.extensions import external_net
 from neutron.extensions import l3
 from neutron.extensions import netmtu
