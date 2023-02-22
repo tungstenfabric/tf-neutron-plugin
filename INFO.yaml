@@ -9,7 +9,7 @@ project_lead: &tungstenfabric_tf-neutron-plugin_ptl
     id: 'nagendraprasath'
     company: ''
     timezone: 'America/Los_Angeles'
-primary_contact: *tungstenfabric_tf-analytics_ptl
+primary_contact: *tungstenfabric_tf-neutron-plugin_ptl
 issue_tracking:
     type: 'jira'
     url: 'https://jira.tungsten.io/projects/'
@@ -33,7 +33,7 @@ meetings:
 repositories:
     - tungstenfabric/tf-neutron-plugin
 committers:
-    - <<: *tungstenfabric__tf-neutron-plugin_ptl
+    - <<: *tungstenfabric_tf-neutron-plugin_ptl
     - name: 'Alexandre Levine'
       email: 'alevine@progmaticlab.com'
       company: 'Progmaticlab'
@@ -49,11 +49,34 @@ committers:
       company: 'Progmaticlab'
       id: 'alexey-mr'
       timezone: 'Europe/Moscow'
+    - name: 'Chandra Mohan G'
+      email: 'cmohan@juniper.net'
+      company: 'Juniper'
+      id: 'chandramohang82'
+      timezone: 'Asia/Kolkata'
+    - name: 'Minakshi'
+      email: 'mlnu@juniper.net'
+      company: 'Juniper'
+      id: ‘mlnu’
+      timezone: 'Asia/Kolkata'
+    - name: 'Ankit Patne'
+      email: 'apatne@juniper.net'
+      company: 'Juniper'
+      id: 'apatne'
+      timezone: 'Asia/Kolkata'
 tsc:
     # yamllint disable rule:line-length
     approval: 'https://wiki.tungsten.io/display/TUN/Projects'
     changes:
-        - type: 'initial approval'
-          name: ''
-          link: ''
-
+        - type: 'Approval'
+          name: 'Committer Approval'
+          link: 'https://lists.tungsten.io/g/tsc/topic/88752516#1249'
+        - type: 'committer approval'
+          name: 'Committer Approval'
+          link: 'https://wiki.tungsten.io/pages/viewpage.action?pageId=49842127&src=contextnavpagetreemode'
+        - type: 'committer approval'
+          name: 'Committer Approval'
+          link: 'https://wiki.tungsten.io/display/TUN/Committer+Approval+for+Minakshi+LNU?src=contextnavpagetreemode'
+        - type: 'committer approval'
+          name: 'Committer Approval'
+          link: 'https://wiki.tungsten.io/pages/viewpage.action?pageId=49842132&src=contextnavpagetreemode'

@@ -19,6 +19,10 @@ try:
 except Exception:
     from neutron_lib.constants import ATTR_NOT_SPECIFIED
 try:
+    from neutron.common.exceptions import BadRequest
+except ImportError:
+    from neutron_lib.exceptions import BadRequest
+try:
     from neutron.common.exceptions import ServiceUnavailable
 except ImportError:
     from neutron_lib.exceptions import ServiceUnavailable
@@ -61,7 +65,10 @@ except ImportError:
 
 from neutron import version
 from neutron.db import portbindings_base
-from neutron.extensions import allowedaddresspairs
+try:
+    from neutron_lib.exceptions import allowedaddresspairs
+except ImportError:
+    from neutron.extensions import allowedaddresspairs
 from neutron.extensions import external_net
 from neutron.extensions import l3
 from neutron.extensions import netmtu
@@ -114,6 +121,8 @@ def _raise_contrail_error(info, obj_name):
         raise HttpResponseError(info)
     elif exc_name == 'NotAuthorized':
         raise NotAuthorized(**info)
+    elif exc_name == 'SecurityGroupRemoteGroupAndRemoteIpPrefix':
+        raise BadRequest(resource="security_group_rule", msg="Cannot specify prefix and group")
     elif str(exc_name) == 'OverQuota':
         info['exception'] = str(info['exception'])
         if 'msg' in info:
