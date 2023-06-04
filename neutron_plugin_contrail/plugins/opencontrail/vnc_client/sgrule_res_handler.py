@@ -92,13 +92,9 @@ class SecurityGroupRuleMixin(object):
         proto = sg_rule.get_protocol()
         sgr_q_dict['protocol'] = None if proto == 'any' else proto
         port_min = sg_rule.get_dst_ports()[0].get_start_port()
-        if sgr_q_dict['protocol'] in (constants.PROTO_NAME_ICMP,
-                                      str(constants.PROTO_NUM_ICMP)):
-            sgr_q_dict['port_range_min'] = port_min
-        else:
-            sgr_q_dict['port_range_min'] = None if port_min == 0 else port_min
+        sgr_q_dict['port_range_min'] = port_min
         port_max = (sg_rule.get_dst_ports()[0].get_end_port())
-        sgr_q_dict['port_range_max'] = None if port_max == 65535 else port_max
+        sgr_q_dict['port_range_max'] = port_max
         sgr_q_dict['remote_ip_prefix'] = remote_cidr
         sgr_q_dict['remote_group_id'] = remote_sg_uuid
 
@@ -306,13 +302,8 @@ class SecurityGroupRuleCreateHandler(ResourceCreateHandler, SecurityGroupRuleMix
         from neutron_plugin_contrail.plugins.opencontrail.vnc_client.sg_res_handler import SecurityGroupHandler
 
         # default port values
-        if sgr_q['protocol'] in (constants.PROTO_NAME_ICMP,
-                                 str(constants.PROTO_NUM_ICMP)):
-            port_min = None
-            port_max = None
-        else:
-            port_min = 0
-            port_max = 65535
+        port_min = 0
+        port_max = 65535
 
         if sgr_q['port_range_min'] is not None:
             port_min = sgr_q['port_range_min']
