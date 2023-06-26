@@ -27,8 +27,6 @@ from neutron_plugin_contrail.common import utils
 
 LOG = logging.getLogger(__name__)
 
-vnc_conn = None
-
 DEFAULT_NEUTRON_QUOTA = -1
 
 
@@ -62,12 +60,7 @@ class QuotaDriver(object):
 
     @classmethod
     def _get_vnc_conn(cls):
-        global vnc_conn
-        if vnc_conn:
-            return vnc_conn
-
-        vnc_conn = utils.get_vnc_api_instance()
-        return vnc_conn
+        return utils.get_vnc_api_instance()
     # end _get_vnc_conn
 
     def limit_check(self, context, tenant_id, resources, values):
