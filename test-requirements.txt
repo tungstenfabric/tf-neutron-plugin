@@ -14,3 +14,4 @@ pyroute2<0.6
 ovs<2.14
 PasteDeploy<3.0
 pecan<1.5.0
+openstacksdk<2.0.0
